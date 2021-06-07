@@ -1,88 +1,71 @@
-<script lang="ts">
-import Vue from 'vue';
+<template>
+    <div class="vue-expert-datatable">
+        <table>
+            <thead>
+                <tr>
+                    <th v-for="header in final_headers" :key="'header_' + header.id">{{ header.title }}</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</template>
 
-interface SampleData {
-    counter: number;
-    initCounter: number;
-    message: {
-        action: string | null;
-        amount: number | null;
-    };
-}
+<script lang="ts">
+import Vue, { PropType } from 'vue';
+import DataInterface from './application/interface/data'
+import HeadersInterface from './application/interface/header'
+//import PaginationInterface from './application/interface/pagination'
 
 export default /*#__PURE__*/Vue.extend({
-  name: 'VueExpertDatatable', // vue component name
-  data(): SampleData {
-    return {
-      counter: 5,
-      initCounter: 5,
-      message: {
-        action: null,
-        amount: null,
-      },
-    };
-  },
-  computed: {
-    changedBy() {
-      const { message } = this as SampleData;
-      if (!message.action) return 'initialized';
-      return `${message.action} ${message.amount || ''}`.trim();
+    name: 'VueExpertDatatable',
+    data(): DataInterface {
+        return {
+            
+        };
     },
-  },
-  methods: {
-    increment(arg: Event | number): void {
-      const amount = (typeof arg !== 'number') ? 1 : arg;
-      this.counter += amount;
-      this.message.action = 'incremented by';
-      this.message.amount = amount;
+    props: {
+        headers: {
+            type: Array as PropType<Array<HeadersInterface>>,
+            default: () : Array<HeadersInterface> => {
+                return [
+                    {
+                        title: 'id',
+                        align: 'left',
+                        value: 'id',
+                    }
+                ]
+            }
+        },
+        data: {
+            type: Array,
+            default: () => {
+                return []
+            }
+        }
     },
-    decrement(arg: Event | number): void {
-      const amount = (typeof arg !== 'number') ? 1 : arg;
-      this.counter -= amount;
-      this.message.action = 'decremented by';
-      this.message.amount = amount;
+    computed: {
+        final_headers() : Array<HeadersInterface> {
+            const headers : Array<HeadersInterface> = []
+            for (let index = 0; index < this.headers.length; index++) {
+                const header = this.headers[index];
+                header.align = header.align ? header.align : 'center'
+                header.colSpan = header.colSpan ? header.colSpan : 1
+                header.filterIcon = header.filterIcon ? header.filterIcon : 'fas fa-arrow'
+                header.sortable = header.sortable ? header.sortable : true
+                header.width = header.width ? header.width : 'auto'
+                headers.push(header)
+            }
+            return headers
+        }
     },
-    reset(): void {
-      this.counter = this.initCounter;
-      this.message.action = 'reset';
-      this.message.amount = null;
+    methods: {
+
     },
-  },
 });
 </script>
 
-<template>
-  <div class="vue-expert-datatable">
-    <p>The counter was {{ changedBy }} to <b>{{ counter }}</b>.</p>
-    <button @click="increment">
-      Click +1
-    </button>
-    <button @click="decrement">
-      Click -1
-    </button>
-    <button @click="increment(5)">
-      Click +5
-    </button>
-    <button @click="decrement(5)">
-      Click -5
-    </button>
-    <button @click="reset">
-      Reset
-    </button>
-  </div>
-</template>
-
-<style scoped>
-  .vue-expert-datatable {
-    display: block;
-    width: 400px;
-    margin: 25px auto;
-    border: 1px solid #ccc;
-    background: #eaeaea;
-    text-align: center;
-    padding: 25px;
-  }
-  .vue-expert-datatable p {
-    margin: 0 0 1em;
-  }
+<style scoped lang="scss">
+    .vue-expert-datatable {
+        width: 100%;
+    }
 </style>
