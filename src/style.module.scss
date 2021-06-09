@@ -1,0 +1,29 @@
+.vue-expert-datatable {
+    width: 100%;
+    .expert-datatable {
+        border-collapse: separate;
+        border-spacing: 0;
+        tbody,
+        thead {
+            tr,
+            td,
+            th {
+                padding: 16px;
+                overflow-wrap: break-word;
+                margin: 0;
+            }
+        }
+        thead {
+            tr {
+                th {
+                    color: rgba(0, 0, 0, .85);
+                    font-weight: 500;
+                    text-align: left;
+                    background: #fafafa;
+                    border-bottom: 1px solid #e8e8e8;
+                    transition: background .3s ease;
+                }
+            }
+        }
+    }
+}
