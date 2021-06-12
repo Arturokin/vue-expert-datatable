@@ -4,7 +4,7 @@
             <thead>
                 <tr>
                     <th v-for="field in final_fields.filter(x => x.visible === true)" :key="'field_' + field.value">
-                        <slot :name="'field.' + field.value" v-bind:field="field">
+                        <slot :name="'header.' + field.value" v-bind:header="field">
                             <span>{{ field.title }}</span>
                         </slot>
                     </th>
@@ -13,8 +13,60 @@
             <tbody>
                 <template v-for="(row, index) in table_data">
                     <tr :key="'record_' + index">
-                        <td v-for="field in final_fields.filter(x => x.visible === true)" :key="'record_' + index + '_' + field.value">
-                            <span v-if="field.value !== 'actions'">{{ row[field.value] }}</span>
+                        <td
+                            v-for="field in final_fields.filter(x => x.visible === true)"
+                            :key="'record_' + index + '_' + field.value"
+                        >
+                            <span 
+                                v-if="field.value !== 'actions'"
+                                class="expert-item"
+                                :class="{ 
+                                    'selectable': field.fieldType !== undefined
+                                }"
+                                @click="selectRow(row, field)"
+                                v-on-clickaway="deSelectRow"
+                            >
+                                <slot 
+                                    :name="'item.' + field.value"
+                                    v-bind:item="row"
+                                    v-bind:value="row[field.value]"
+                                    v-bind:header="field"
+                                    v-if="(!is_selected_row(row, field.value) || field.fieldType === undefined) && !field.alwaysEditable"
+                                >
+                                    {{ row[field.value] }}
+                                </slot>
+                                <slot 
+                                    :name="'edit_item.' + field.value"
+                                    v-bind:item="row"
+                                    v-bind:value="row[field.value]"
+                                    v-bind:header="field"
+                                    v-else-if="row[field.value]"
+                                >
+                                    <a-input
+                                        v-if="field.fieldType === 'text'"
+                                        :ref="'input_' + field.value"
+                                        v-model="selected_row[field.value]"
+                                    ></a-input>
+                                    <a-textarea
+                                        v-if="field.fieldType === 'longtext'"
+                                        :ref="'input_' + field.value"
+                                        v-model="selected_row[field.value]"
+                                    ></a-textarea>
+                                    <a-input-number
+                                        v-if="field.fieldType === 'number'"
+                                        :ref="'input_' + field.value"
+                                        v-model="selected_row[field.value]"
+                                    ></a-input-number>
+                                    <a-checkbox
+                                        v-if="field.fieldType === 'checkbox'"
+                                        :ref="'input_' + field.value"
+                                    ></a-checkbox>
+                                </slot>
+                                <span v-else>
+                                    Field does not exist
+                                </span>
+                            </span>
+                            
                             <span v-else>
                                 <a-button-group>
                                     <a-button size="small" type="primary" icon="edit"></a-button>
@@ -34,9 +86,10 @@ import Vue, { PropType } from 'vue';
 import DataInterface from './application/interface/data'
 import FieldsInterface from './application/interface/field'
 import MethodInterface from './application/interface/method'
+import { mixin as clickaway } from 'vue-clickaway'
 //import PaginationInterface from './application/interface/pagination'
 import axios, { AxiosResponse } from 'axios'
-import { Button, Modal, Row, Col, Icon, Drawer } from 'ant-design-vue'
+import { Button, Modal, Row, Col, Icon, Drawer, Input, Checkbox, Switch, InputNumber } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css';
 Vue.use(Button)
 Vue.use(Modal)
@@ -44,12 +97,17 @@ Vue.use(Row)
 Vue.use(Col)
 Vue.use(Icon)
 Vue.use(Drawer)
+Vue.use(Input)
+Vue.use(Checkbox)
+Vue.use(Switch)
+Vue.use(InputNumber)
 
 export default /*#__PURE__*/Vue.extend({
     name: 'VueExpertDatatable',
     components: {
         Button, Modal, Row, Col, Icon, Drawer
     },
+    mixins: [ clickaway ],
     data(): DataInterface {
         return {
             base_url_testing: 'http://localhost:1337/',
@@ -64,7 +122,8 @@ export default /*#__PURE__*/Vue.extend({
             loading_data: false,
             loading_add_update: false,
             loading_delete: false,
-            table_data: []
+            table_data: [],
+            selected_row: undefined
         }
     },
     props: {
@@ -82,13 +141,15 @@ export default /*#__PURE__*/Vue.extend({
                         title: 'Name',
                         align: 'left',
                         value: 'name',
-                        visible: true
+                        visible: true,
+                        fieldType: 'text'
                     },
                     {
                         title: 'Description',
                         align: 'left',
                         value: 'description',
-                        visible: true
+                        visible: true,
+                        fieldType: 'longtext'
                     },
                     {
                         title: 'Actions',
@@ -170,6 +231,10 @@ export default /*#__PURE__*/Vue.extend({
                     description: 'Testing'
                 }
             }
+        },
+        disableAutoCrud: {
+            type: Boolean,
+            default: true
         }
     },
     computed: {
@@ -183,6 +248,7 @@ export default /*#__PURE__*/Vue.extend({
                 field.sortable = field.sortable ? field.sortable : true
                 field.width = field.width ? field.width : 'auto'
                 field.visible = field.visible ? field.visible : true
+                field.alwaysEditable = field.alwaysEditable ? field.alwaysEditable : false
                 fields.push(field)
             }
 
@@ -295,6 +361,33 @@ export default /*#__PURE__*/Vue.extend({
                         return this.http_client.post(method.url)
                         break;
                 }
+            }
+        },
+        selectRow (row: any, field: FieldsInterface) {
+            if (field.fieldType !== undefined && !field.alwaysEditable) {
+                this.selected_row = JSON.parse(JSON.stringify(row))
+                this.$nextTick(() => {
+                    const input : any = this.$refs['input_' + field.value]
+                    if (Array.isArray(input)) {
+                        if (input[0].$el) {
+                            input[0].$el.focus()
+                        }
+                    } else {
+                        if (input.$el) {
+                            input.$el.focus()
+                        }
+                    }
+                })
+            }
+        },
+        deSelectRow () {
+            // this.selected_row = undefined
+        },
+        is_selected_row (row: any) {
+            if (this.selected_row !== undefined) {
+                return this.selected_row[this.keyName] == row[this.keyName]
+            } else {
+                return false
             }
         }
     },

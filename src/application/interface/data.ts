@@ -14,5 +14,6 @@ export default interface Data {
     loading_data: boolean,
     loading_add_update: boolean,
     loading_delete: boolean,
-    table_data: []
+    table_data: [],
+    selected_row: any
 }

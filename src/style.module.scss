@@ -3,6 +3,7 @@
     .expert-datatable {
         border-collapse: separate;
         border-spacing: 0;
+        width: 100%;
         tbody,
         thead {
             tr,
@@ -22,6 +23,19 @@
                     background: #fafafa;
                     border-bottom: 1px solid #e8e8e8;
                     transition: background .3s ease;
+                }
+            }
+        }
+        tbody {
+            tr {
+                td {
+                    .selectable {
+                        cursor: pointer;
+                    }
+                    .expert-item {
+                        width: 100%;
+                        display: inline-block;
+                    }
                 }
             }
         }

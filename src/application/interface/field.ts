@@ -6,5 +6,7 @@ export default interface Field {
     sortable?: boolean,
     title: string,
     width?: string | number,
-    visible?: boolean
+    visible?: boolean,
+    fieldType?: 'text' | 'longtext' | 'number' | 'select' | 'range' | 'checkbox' | 'switch' | 'date' | 'datetime' | 'autocomplete' | 'custom' | undefined,
+    alwaysEditable?: boolean
 }
