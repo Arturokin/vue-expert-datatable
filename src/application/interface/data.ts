@@ -1,4 +1,5 @@
 import { AxiosInstance } from "axios";
+import Language from "./language";
 import Method from "./method";
 
 export default interface Data {
@@ -14,6 +15,8 @@ export default interface Data {
     loading_data: boolean,
     loading_add_update: boolean,
     loading_delete: boolean,
-    table_data: [],
-    selected_row: any
+    table_data: any[],
+    selected_row: any,
+    item_record: any,
+    current_language: Language | undefined
 }

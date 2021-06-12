@@ -23,6 +23,7 @@
   "dependencies": {
     "ant-design-vue": "^1.7.5",
     "axios": "^0.21.1",
+    "core-js": "^3.14.0",
     "vue-cool-select": "^3.5.2"
   },
   "devDependencies": {
@@ -36,9 +37,11 @@
     "@rollup/plugin-replace": "^2.3.4",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
+    "@vue/cli": "^4.5.13",
     "@vue/cli-plugin-babel": "^4.5.10",
     "@vue/cli-plugin-typescript": "^4.5.10",
     "@vue/cli-service": "^4.5.10",
+    "@vue/cli-service-global": "^4.5.13",
     "cross-env": "^7.0.3",
     "eslint": "^7.28.0",
     "minimist": "^1.2.5",
@@ -49,6 +52,7 @@
     "sass-loader": "^10.2.0",
     "typescript": "^3.8.3",
     "vue": "^2.6.12",
+    "vue-loader": "^15.9.7",
     "vue-template-compiler": "^2.6.12"
   },
   "peerDependencies": {

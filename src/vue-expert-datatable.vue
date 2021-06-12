@@ -1,6 +1,9 @@
 <template>
     <div class="vue-expert-datatable">
-        <table class="expert-datatable">
+        <table
+            class="expert-datatable"
+            :class="table_class"
+        >
             <thead>
                 <tr>
                     <th v-for="field in final_fields.filter(x => x.visible === true)" :key="'field_' + field.value">
@@ -12,10 +15,11 @@
             </thead>
             <tbody>
                 <template v-for="(row, index) in table_data">
-                    <tr :key="'record_' + index">
+                    <tr :key="'record_' + index" class="expert-row">
                         <td
                             v-for="field in final_fields.filter(x => x.visible === true)"
                             :key="'record_' + index + '_' + field.value"
+                            class="expert-column"
                         >
                             <span 
                                 v-if="field.value !== 'actions'"
@@ -24,7 +28,7 @@
                                     'selectable': field.fieldType !== undefined
                                 }"
                                 @click="selectRow(row, field)"
-                                v-on-clickaway="deSelectRow"
+                                v-on-click-outside="deSelectRow"
                             >
                                 <slot 
                                     :name="'item.' + field.value"
@@ -42,25 +46,11 @@
                                     v-bind:header="field"
                                     v-else-if="row[field.value]"
                                 >
-                                    <a-input
-                                        v-if="field.fieldType === 'text'"
-                                        :ref="'input_' + field.value"
-                                        v-model="selected_row[field.value]"
-                                    ></a-input>
-                                    <a-textarea
-                                        v-if="field.fieldType === 'longtext'"
-                                        :ref="'input_' + field.value"
-                                        v-model="selected_row[field.value]"
-                                    ></a-textarea>
-                                    <a-input-number
-                                        v-if="field.fieldType === 'number'"
-                                        :ref="'input_' + field.value"
-                                        v-model="selected_row[field.value]"
-                                    ></a-input-number>
-                                    <a-checkbox
-                                        v-if="field.fieldType === 'checkbox'"
-                                        :ref="'input_' + field.value"
-                                    ></a-checkbox>
+                                    <item-field
+                                        :field="field"
+                                        :table-name="tableName"
+                                        item_record[field.value]
+                                    ></item-field>
                                 </slot>
                                 <span v-else>
                                     Field does not exist
@@ -69,13 +59,58 @@
                             
                             <span v-else>
                                 <a-button-group>
-                                    <a-button size="small" type="primary" icon="edit"></a-button>
-                                    <a-button size="small" type="danger" icon="delete"></a-button>
+                                    <a-tooltip>
+                                        <span slot="title">
+                                            {{ current_language.edit_button_text }}
+                                        </span>
+                                        <a-button size="small" type="primary" icon="edit" @click="modalEditItem(item_record)"></a-button>
+                                    </a-tooltip>
+                                    <a-tooltip>
+                                        <span slot="title">
+                                            {{ current_language.delete_button_text }}
+                                        </span>
+                                        <a-button size="small" type="danger" icon="delete" @click="modalDeleteItem(row[field.value])"></a-button>
+                                    </a-tooltip>
                                 </a-button-group>
                             </span>
                         </td>
                     </tr>
                 </template>
+                <tr class="expert-row add-item-row">
+                    <td
+                        v-for="field in final_fields.filter(x => x.visible === true)"
+                        :key="'record_item_record_' + field.value"
+                        class="expert-column"
+                    >
+                        <span 
+                            v-if="field.value !== 'actions'"
+                            class="expert-item"
+                        >
+                            <slot 
+                                :name="'edit_item.' + field.value"
+                                v-bind:item="item_record"
+                                v-bind:value="item_record[field.value]"
+                                v-bind:header="field"
+                            >
+                                <item-field
+                                    :field="field"
+                                    :table-name="tableName"
+                                    v-model="item_record[field.value]"
+                                ></item-field>
+                            </slot>
+                        </span>
+                        <span v-else>
+                            <a-button-group>
+                                <a-tooltip>
+                                    <span slot="title">
+                                        {{ current_language.save_button_text }}
+                                    </span>
+                                    <a-button size="small" type="primary" icon="check" @click="saveTableData(false)"></a-button>
+                                </a-tooltip>
+                            </a-button-group>
+                        </span>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -83,31 +118,18 @@
 
 <script lang="ts">
 import Vue, { PropType } from 'vue';
+import axios, { AxiosResponse } from 'axios'
 import DataInterface from './application/interface/data'
 import FieldsInterface from './application/interface/field'
 import MethodInterface from './application/interface/method'
-import { mixin as clickaway } from 'vue-clickaway'
-//import PaginationInterface from './application/interface/pagination'
-import axios, { AxiosResponse } from 'axios'
-import { Button, Modal, Row, Col, Icon, Drawer, Input, Checkbox, Switch, InputNumber } from 'ant-design-vue'
-import 'ant-design-vue/dist/antd.css';
-Vue.use(Button)
-Vue.use(Modal)
-Vue.use(Row)
-Vue.use(Col)
-Vue.use(Icon)
-Vue.use(Drawer)
-Vue.use(Input)
-Vue.use(Checkbox)
-Vue.use(Switch)
-Vue.use(InputNumber)
+import ItemField from './application/components/item-field/item-field.vue'
+import initLanguage from './application/language/init-language'
 
 export default /*#__PURE__*/Vue.extend({
     name: 'VueExpertDatatable',
     components: {
-        Button, Modal, Row, Col, Icon, Drawer
+        'item-field': ItemField
     },
-    mixins: [ clickaway ],
     data(): DataInterface {
         return {
             base_url_testing: 'http://localhost:1337/',
@@ -123,10 +145,16 @@ export default /*#__PURE__*/Vue.extend({
             loading_add_update: false,
             loading_delete: false,
             table_data: [],
-            selected_row: undefined
+            selected_row: undefined,
+            item_record: {},
+            current_language: undefined,
         }
     },
     props: {
+        tableName: {
+            type: String,
+            default: 'record'
+        },
         fields: {
             type: Array as PropType<Array<FieldsInterface>>,
             default: () : Array<FieldsInterface> => {
@@ -135,21 +163,24 @@ export default /*#__PURE__*/Vue.extend({
                         title: 'id',
                         align: 'left',
                         value: 'id',
-                        visible: true
+                        visible: true,
+                        pronoun: 'the'
                     },
                     {
                         title: 'Name',
                         align: 'left',
                         value: 'name',
                         visible: true,
-                        fieldType: 'text'
+                        fieldType: 'text',
+                        pronoun: 'the'
                     },
                     {
                         title: 'Description',
                         align: 'left',
                         value: 'description',
                         visible: true,
-                        fieldType: 'longtext'
+                        fieldType: 'longtext',
+                        pronoun: 'the'
                     },
                     {
                         title: 'Actions',
@@ -160,7 +191,7 @@ export default /*#__PURE__*/Vue.extend({
                 ]
             }
         },
-        rest_api_url: {
+        restApiUrl: {
             type: String,
             default: undefined
         },
@@ -235,6 +266,20 @@ export default /*#__PURE__*/Vue.extend({
         disableAutoCrud: {
             type: Boolean,
             default: true
+        },
+        lang: {
+            type: String,
+            default: 'EN'
+        },
+        size: {
+            type: String,
+            default: 'normal'
+        },
+        transformData: {
+            type: Function,
+            default: (data: any) => {
+                return data
+            }
         }
     },
     computed: {
@@ -267,7 +312,12 @@ export default /*#__PURE__*/Vue.extend({
                 fields.push(actions_field)
             }
             return fields
-        }
+        },
+        table_class() {
+            const classes: string[] = []
+            classes.push('expert-datatable-' + this.size)
+            return classes
+        },
     },
     watch: {
         item: function (newVal) {
@@ -277,9 +327,12 @@ export default /*#__PURE__*/Vue.extend({
             this.$emit('update:item', newVal)
         }
     },
+    beforeMount() {
+        this.initData()
+    },
     mounted() {
         this.initComponent()
-        this.getData()
+        this.getTableData()
     },
     methods: {
         initComponent() {
@@ -287,21 +340,21 @@ export default /*#__PURE__*/Vue.extend({
             this.initMethods()
         },
         initMethods() : void {
-            if (this.rest_api_url) {
+            if (this.restApiUrl) {
                 this.get_method = {
-                    url: this.cleanUrl(this.rest_api_url),
+                    url: this.cleanUrl(this.restApiUrl),
                     type: 'GET'
                 }
                 this.add_method = {
-                    url: this.cleanUrl(this.rest_api_url),
+                    url: this.cleanUrl(this.restApiUrl),
                     type: 'POST'
                 }
                 this.update_method = {
-                    url: this.cleanUrl(this.rest_api_url),
+                    url: this.cleanUrl(this.restApiUrl),
                     type: 'PUT'
                 }
                 this.delete_method = {
-                    url: this.cleanUrl(this.rest_api_url),
+                    url: this.cleanUrl(this.restApiUrl),
                     type: 'DELETE'
                 }
             } else {
@@ -320,11 +373,18 @@ export default /*#__PURE__*/Vue.extend({
                 })
             }
         },
+        initData() : void {
+            this.current_language = initLanguage(this.lang, this.tableName)
+            for (let index = 0; index < this.fields.length; index++) {
+                const item_field = this.fields[index];
+                this.item_record[item_field.value] = null
+            }
+        },
         cleanUrl (url: string) : string {
             const final_url = url.replace(/\/$/, "");
             return final_url
         },
-        getData() {
+        getTableData() {
             if(this.get_method) {
                 this.loading_data = true
                 const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.get_method)
@@ -336,21 +396,77 @@ export default /*#__PURE__*/Vue.extend({
                             this.$emit('error', error)
                         })
                 }
+            } else {
+                console.error('you haven\'t provided a GET method')
             }
+        },
+        saveTableData(is_edit: boolean = true) {
+            if (!is_edit) {
+                if(this.add_method) {
+                    this.loading_data = true
+                    const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
+                    if(http_method) {
+                        http_method.then((result) => {
+                            if (result.data.update_table || result.data[this.itemName] === undefined) {
+                                this.getTableData()
+                            } else {
+                                const item: any = result.data[this.itemName]
+                                this.table_data.push(item)
+                            }
+                        })
+                            .catch((error) => {
+                                this.$emit('error', error)
+                            })
+                    }
+                } else {
+                    console.error('you haven\'t provided an add method')
+                }
+            } else {
+                if(this.update_method) {
+                    this.loading_data = true
+                    const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
+                    if(http_method) {
+                        http_method.then((result) => {
+                            if (result.data.update_table || result.data[this.itemName] === undefined) {
+                                this.getTableData()
+                            } else {
+                                const item: any = result.data[this.itemName]
+                                this.table_data.push(item)
+                            }
+                        })
+                            .catch((error) => {
+                                this.$emit('error', error)
+                            })
+                    }
+                } else {
+                    console.error('you haven\'t provided an update method')
+                }
+            }
+        },
+        modalEditItem(item_record: any) {
+            this.item_record = item_record
+        },
+        modalDeleteItem(item_record: any) {
+            this.item_record = item_record
         },
         getHttpByMethod(method: MethodInterface) {
             if(this.http_client) {
+                let data: any = this.item_record
+                data = this.transformData(data)
+                if (method.transformData) {
+                    data = method.transformData(data)
+                }
                 switch (method.type) {
                     case 'GET':
                         return this.http_client.get(method.url)
                         break;
 
                     case 'POST':
-                        return this.http_client.post(method.url)
+                        return this.http_client.post(method.url, data)
                         break;
 
                     case 'PUT':
-                        return this.http_client.put(method.url)
+                        return this.http_client.put(method.url, data)
                         break;
 
                     case 'DELETE':
@@ -358,7 +474,7 @@ export default /*#__PURE__*/Vue.extend({
                         break;
                 
                     default:
-                        return this.http_client.post(method.url)
+                        return this.http_client.post(method.url, data)
                         break;
                 }
             }
@@ -366,6 +482,7 @@ export default /*#__PURE__*/Vue.extend({
         selectRow (row: any, field: FieldsInterface) {
             if (field.fieldType !== undefined && !field.alwaysEditable) {
                 this.selected_row = JSON.parse(JSON.stringify(row))
+                this.item_record = JSON.parse(JSON.stringify(row))
                 this.$nextTick(() => {
                     const input : any = this.$refs['input_' + field.value]
                     if (Array.isArray(input)) {
@@ -381,7 +498,8 @@ export default /*#__PURE__*/Vue.extend({
             }
         },
         deSelectRow () {
-            // this.selected_row = undefined
+            console.log('click outside')
+            this.selected_row = undefined
         },
         is_selected_row (row: any) {
             if (this.selected_row !== undefined) {
