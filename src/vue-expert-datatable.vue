@@ -1,5 +1,5 @@
 <template>
-    <div class="vue-expert-datatable">
+    <div class="vue-expert-datatable" :class="global_class">
         <table
             class="expert-datatable"
             :class="table_class"
@@ -28,7 +28,7 @@
                                     'selectable': field.fieldType !== undefined
                                 }"
                                 @click="selectRow(row, field)"
-                                v-on-click-outside="deSelectRow"
+                                v-click-outside="deSelectRow"
                             >
                                 <slot 
                                     :name="'item.' + field.value"
@@ -53,7 +53,7 @@
                                     ></item-field>
                                 </slot>
                                 <span v-else>
-                                    Field does not exist
+                                    
                                 </span>
                             </span>
                             
@@ -100,14 +100,14 @@
                             </slot>
                         </span>
                         <span v-else>
-                            <a-button-group>
+                            <!-- <a-button-group>
                                 <a-tooltip>
                                     <span slot="title">
                                         {{ current_language.save_button_text }}
                                     </span>
                                     <a-button size="small" type="primary" icon="check" @click="saveTableData(false)"></a-button>
                                 </a-tooltip>
-                            </a-button-group>
+                            </a-button-group> -->
                         </span>
                     </td>
                 </tr>
@@ -318,6 +318,9 @@ export default /*#__PURE__*/Vue.extend({
             classes.push('expert-datatable-' + this.size)
             return classes
         },
+		global_class () {
+			return this.$expert_datatable_config.theme
+		}
     },
     watch: {
         item: function (newVal) {

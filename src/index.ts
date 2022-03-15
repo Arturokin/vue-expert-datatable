@@ -1,5 +1,5 @@
 import _vue from "vue"
-import Configuration from "./application/interface/configutarion";
+import Configuration from "./application/interface/configuration";
 import VueExpertDatatable from './vue-expert-datatable.vue'
 import ClickOutside from './application/components/click-outside'
 
@@ -13,7 +13,7 @@ export function VueExpertDatatablePlugin(Vue: typeof _vue, options: Configuratio
     if (options === undefined) {
         options = {
             lang: 'ES',
-            theme: 'ant-design'
+            theme: 'vue-expert-datatable'
         }
     }
     Vue.prototype.$expert_datatable_config = options;

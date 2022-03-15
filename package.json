@@ -21,10 +21,8 @@
     "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife"
   },
   "dependencies": {
-    "ant-design-vue": "^1.7.5",
     "axios": "^0.21.1",
-    "core-js": "^3.14.0",
-    "vue-cool-select": "^3.5.2"
+    "core-js": "^3.14.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
