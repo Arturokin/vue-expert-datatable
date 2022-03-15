@@ -3,6 +3,8 @@
         <table
             class="expert-datatable"
             :class="table_class"
+			cellspacing="0"
+			rowspacing="0"
         >
             <thead>
                 <tr>
@@ -16,12 +18,13 @@
             <tbody>
                 <template v-for="(row, index) in table_data">
                     <tr :key="'record_' + index" class="expert-row">
+						{{ row }}
                         <td
                             v-for="field in final_fields.filter(x => x.visible === true)"
                             :key="'record_' + index + '_' + field.value"
                             class="expert-column"
                         >
-                            <span 
+                            <div 
                                 v-if="field.value !== 'actions'"
                                 class="expert-item"
                                 :class="{ 
@@ -55,9 +58,9 @@
                                 <span v-else>
                                     
                                 </span>
-                            </span>
+                            </div>
                             
-                            <span v-else>
+                            <div v-else>
                                 <a-button-group>
                                     <a-tooltip>
                                         <span slot="title">
@@ -72,7 +75,7 @@
                                         <a-button size="small" type="danger" icon="delete" @click="modalDeleteItem(row[field.value])"></a-button>
                                     </a-tooltip>
                                 </a-button-group>
-                            </span>
+                            </div>
                         </td>
                     </tr>
                 </template>
@@ -147,6 +150,7 @@ export default /*#__PURE__*/Vue.extend({
             table_data: [],
             selected_row: undefined,
             item_record: {},
+            item_record_before: {},
             current_language: undefined,
         }
     },
@@ -191,6 +195,12 @@ export default /*#__PURE__*/Vue.extend({
                 ]
             }
         },
+		data: {
+			type: Array,
+			default: () => {
+				return undefined
+			}
+		},
         restApiUrl: {
             type: String,
             default: undefined
@@ -280,7 +290,11 @@ export default /*#__PURE__*/Vue.extend({
             default: (data: any) => {
                 return data
             }
-        }
+        },
+        bordered: {
+            type: Boolean,
+            default: true
+        },
     },
     computed: {
         final_fields() : Array<FieldsInterface> {
@@ -316,10 +330,21 @@ export default /*#__PURE__*/Vue.extend({
         table_class() {
             const classes: string[] = []
             classes.push('expert-datatable-' + this.size)
+			if (this.bordered) {
+				classes.push('bordered')
+			}
             return classes
         },
 		global_class () {
-			return this.$expert_datatable_config.theme
+			const classes: String[] = []
+			classes.push(this.$expert_datatable_config.theme)
+			return classes
+		},
+		isWithApi () {
+			if (this.restApiUrl) {
+				return true
+			}
+			return false
 		}
     },
     watch: {
@@ -328,7 +353,10 @@ export default /*#__PURE__*/Vue.extend({
         },
         current_item: function (newVal) {
             this.$emit('update:item', newVal)
-        }
+        },
+		data: function (newval: any) {
+			this.table_data = newval
+		}
     },
     beforeMount() {
         this.initData()
@@ -339,8 +367,10 @@ export default /*#__PURE__*/Vue.extend({
     },
     methods: {
         initComponent() {
-            this.initHttpClient()
-            this.initMethods()
+			if (this.isWithApi) {
+            	this.initHttpClient()
+            	this.initMethods()
+			}
         },
         initMethods() : void {
             if (this.restApiUrl) {
@@ -388,63 +418,77 @@ export default /*#__PURE__*/Vue.extend({
             return final_url
         },
         getTableData() {
-            if(this.get_method) {
-                this.loading_data = true
-                const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.get_method)
-                if(http_method) {
-                    http_method.then((result) => {
-                        this.table_data = result.data
-                    })
-                        .catch((error) => {
-                            this.$emit('error', error)
-                        })
-                }
-            } else {
-                console.error('you haven\'t provided a GET method')
-            }
+            if (this.isWithApi) {
+				if(this.get_method) {
+					this.loading_data = true
+					const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.get_method)
+					if(http_method) {
+						http_method.then((result) => {
+							this.table_data = result.data
+							this.$emit('updated-data', this.table_data)
+						})
+							.catch((error) => {
+								this.$emit('error', error)
+							})
+					}
+				} else {
+					console.error('you haven\'t provided a GET method')
+				}
+			} else {
+				this.table_data = this.data as any
+				this.$emit('load-data')
+			}
         },
         saveTableData(is_edit: boolean = true) {
-            if (!is_edit) {
-                if(this.add_method) {
-                    this.loading_data = true
-                    const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
-                    if(http_method) {
-                        http_method.then((result) => {
-                            if (result.data.update_table || result.data[this.itemName] === undefined) {
-                                this.getTableData()
-                            } else {
-                                const item: any = result.data[this.itemName]
-                                this.table_data.push(item)
-                            }
-                        })
-                            .catch((error) => {
-                                this.$emit('error', error)
-                            })
-                    }
-                } else {
-                    console.error('you haven\'t provided an add method')
-                }
-            } else {
-                if(this.update_method) {
-                    this.loading_data = true
-                    const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
-                    if(http_method) {
-                        http_method.then((result) => {
-                            if (result.data.update_table || result.data[this.itemName] === undefined) {
-                                this.getTableData()
-                            } else {
-                                const item: any = result.data[this.itemName]
-                                this.table_data.push(item)
-                            }
-                        })
-                            .catch((error) => {
-                                this.$emit('error', error)
-                            })
-                    }
-                } else {
-                    console.error('you haven\'t provided an update method')
-                }
-            }
+            if (this.isWithApi) {
+				if (!is_edit) {
+					if(this.add_method) {
+						this.loading_data = true
+						const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
+						if(http_method) {
+							http_method.then((result) => {
+								if (result.data.update_table || result.data[this.itemName] === undefined) {
+									this.getTableData()
+								} else {
+									const item: any = result.data[this.itemName]
+									this.table_data.push(item)
+									this.$emit('updated-data', this.table_data)
+								}
+								this.$emit('inserted-item', result.data[this.itemName])
+							})
+								.catch((error) => {
+									this.$emit('error', error)
+								})
+						}
+					} else {
+						console.error('you haven\'t provided an add method')
+					}
+				} else {
+					if(this.update_method) {
+						this.loading_data = true
+						const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
+						if(http_method) {
+							http_method.then((result) => {
+								if (result.data.update_table || result.data[this.itemName] === undefined) {
+									this.getTableData()
+								} else {
+									const item: any = result.data[this.itemName]
+									this.table_data.push(item)
+									this.$emit('updated-data', this.table_data)
+								}
+								this.$emit('updated-item', result.data[this.itemName])
+							})
+								.catch((error) => {
+									this.$emit('error', error)
+								})
+						}
+					} else {
+						console.error('you haven\'t provided an update method')
+					}
+				}
+			} else {
+				this.$emit('')
+			}
         },
         modalEditItem(item_record: any) {
             this.item_record = item_record
@@ -481,11 +525,14 @@ export default /*#__PURE__*/Vue.extend({
                         break;
                 }
             }
+			return undefined
         },
         selectRow (row: any, field: FieldsInterface) {
+			console.log('select row', row)
             if (field.fieldType !== undefined && !field.alwaysEditable) {
                 this.selected_row = JSON.parse(JSON.stringify(row))
                 this.item_record = JSON.parse(JSON.stringify(row))
+                this.item_record_before = JSON.parse(JSON.stringify(row))
                 this.$nextTick(() => {
                     const input : any = this.$refs['input_' + field.value]
                     if (Array.isArray(input)) {

@@ -1,3 +1,8 @@
+$border-color: rgb(0 0 0 / 8%);
+$border: 1px solid $border-color;
+$border-focus-color: #40a9ff;
+$box-shadow: 0 0 0 2px rgb(24 144 255 / 20%);
+
 .vue-expert-datatable {
     width: 100%;
     .expert-datatable {
@@ -9,7 +14,6 @@
             tr,
             td,
             th {
-                padding: 16px;
                 overflow-wrap: break-word;
                 margin: 0;
             }
@@ -20,7 +24,6 @@
                 tr,
                 td,
                 th {
-                    padding: 4px;
                     overflow-wrap: break-word;
                     margin: 0;
                 }
@@ -41,6 +44,7 @@
         tbody {
             tr {
                 td {
+					padding: 0;
                     .selectable {
                         cursor: pointer;
                     }
@@ -48,14 +52,49 @@
                         width: 100%;
                         display: inline-block;
                     }
+
+					.focused {
+						border-color: $border-focus-color;
+						box-shadow: $box-shadow;
+					}
                 }
 
-                &.selected-row, &.add-item-row {
-                    td {
-                        padding: 0px 6px;
-                    }
+                &.selected-row {
+                    
                 }
             }
         }
+
+		&.bordered {
+			tr {
+				th {
+					border-top: $border;
+				}
+				td:first-child, th:first-child {
+					border-left: $border;
+					border-right: $border;
+				}
+				td:not(:first-child), th:not(:first-child) {
+					border-right: $border;
+				}
+                td {
+					border-bottom: $border;
+                }
+
+                &.selected-row, &.add-item-row {
+                    
+                }
+            }
+		}
+
+		.expert-item-field {
+			width: 100%;
+			margin: 0;
+			padding: 0;
+			.datatable-field {
+				width: 100%;
+				margin: 0;
+			}
+		}
     }
 }

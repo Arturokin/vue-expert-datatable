@@ -18,5 +18,6 @@ export default interface Data {
     table_data: any[],
     selected_row: any,
     item_record: any,
+    item_record_before: any,
     current_language: Language | undefined
 }

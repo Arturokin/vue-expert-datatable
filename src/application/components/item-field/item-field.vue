@@ -1,11 +1,11 @@
 <template>
     <div class="expert-item-field">
-        <a-input
+        <expert-datatable-input
             v-if="field.fieldType === 'text'"
             :ref="'input_' + field.value"
             v-model="localValue"
             :placeholder="inputPlaceholder(field)"
-        ></a-input>
+        ></expert-datatable-input>
         <a-textarea
             v-if="field.fieldType === 'longtext'"
             :ref="'input_' + field.value"
@@ -32,8 +32,13 @@ import DataInterface from './data-interface'
 import enEN from '../../language/en-EN'
 import initLanguage from '../../language/init-language'
 
+import ExpertDatatableInput from '../inputs/input/expert_datatable_input.vue'
+
 export default /*#__PURE__*/Vue.extend({
-    name: 'VueExpertDatatable',
+    name: 'ExpertDatatableItemField',
+	components: {
+		'expert-datatable-input': ExpertDatatableInput
+	},
     data(): DataInterface {
         return {
             localValue: this.value,
