@@ -17,8 +17,11 @@
             </thead>
             <tbody>
                 <template v-for="(row, index) in table_data">
-                    <tr :key="'record_' + index" class="expert-row">
-						{{ row }}
+                    <tr
+						:key="'record_' + index"
+						class="expert-row"
+						:class="{ 'selected': (selected_index === index) }"
+					>
                         <td
                             v-for="field in final_fields.filter(x => x.visible === true)"
                             :key="'record_' + index + '_' + field.value"
@@ -27,93 +30,97 @@
                             <div 
                                 v-if="field.value !== 'actions'"
                                 class="expert-item"
-                                :class="{ 
-                                    'selectable': field.fieldType !== undefined
+                                :class="{
+                                    'selectable': field.fieldType !== undefined,
+									'selected': (selected_index === index) && field.value === selected_field.value && selected_field
                                 }"
-                                @click="selectRow(row, field)"
-                                v-click-outside="deSelectRow"
+								:ref="`item_${index}_${field.value}`"
+                                @click="selectRow(row, index, field)"
                             >
                                 <slot 
                                     :name="'item.' + field.value"
+                                    v-bind:input="event_input"
+                                    v-bind:blur="event_blur"
+                                    v-bind:focus="event_focus"
+                                    v-bind:key_down="event_key_down"
                                     v-bind:item="row"
                                     v-bind:value="row[field.value]"
                                     v-bind:header="field"
-                                    v-if="(!is_selected_row(row, field.value) || field.fieldType === undefined) && !field.alwaysEditable"
+                                    v-bind:selected="(selected_index === index) && field.value === selected_field.value && selected_field"
+									v-bind:selected_row="selected_index === index"
+									v-bind:adding="false"
                                 >
-                                    {{ row[field.value] }}
+									<template v-if="field.fieldType && field.editable">
+										<item-field
+											:field="field"
+											:table-name="tableName"
+											v-model="row[field.value]"
+										></item-field>
+									</template>
+									<template v-else>
+										<span>
+											{{ row[field.value] }}
+										</span>
+									</template>
                                 </slot>
-                                <slot 
-                                    :name="'edit_item.' + field.value"
-                                    v-bind:item="row"
-                                    v-bind:value="row[field.value]"
-                                    v-bind:header="field"
-                                    v-else-if="row[field.value]"
-                                >
-                                    <item-field
-                                        :field="field"
-                                        :table-name="tableName"
-                                        item_record[field.value]
-                                    ></item-field>
-                                </slot>
-                                <span v-else>
-                                    
-                                </span>
                             </div>
                             
                             <div v-else>
-                                <a-button-group>
-                                    <a-tooltip>
-                                        <span slot="title">
-                                            {{ current_language.edit_button_text }}
-                                        </span>
-                                        <a-button size="small" type="primary" icon="edit" @click="modalEditItem(item_record)"></a-button>
-                                    </a-tooltip>
-                                    <a-tooltip>
-                                        <span slot="title">
-                                            {{ current_language.delete_button_text }}
-                                        </span>
-                                        <a-button size="small" type="danger" icon="delete" @click="modalDeleteItem(row[field.value])"></a-button>
-                                    </a-tooltip>
-                                </a-button-group>
+								<a-tooltip :title="current_language.edit_button_text">
+									<font-awesome-icon icon="edit" class="expert-datatable-button" @click="modalEditItem(item_record)"></font-awesome-icon>
+								</a-tooltip>
+								<a-tooltip :title="current_language.delete_button_text">
+									<font-awesome-icon icon="trash" class="expert-datatable-button" @click="modalDeleteItem(row[field.value])"></font-awesome-icon>
+								</a-tooltip>
                             </div>
                         </td>
                     </tr>
                 </template>
-                <tr class="expert-row add-item-row">
+                <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row">
                     <td
                         v-for="field in final_fields.filter(x => x.visible === true)"
                         :key="'record_item_record_' + field.value"
                         class="expert-column"
                     >
-                        <span 
-                            v-if="field.value !== 'actions'"
-                            class="expert-item"
-                        >
-                            <slot 
-                                :name="'edit_item.' + field.value"
-                                v-bind:item="item_record"
-                                v-bind:value="item_record[field.value]"
-                                v-bind:header="field"
-                            >
-                                <item-field
-                                    :field="field"
-                                    :table-name="tableName"
-                                    v-model="item_record[field.value]"
-                                ></item-field>
-                            </slot>
-                        </span>
+						<ValidationProvider
+							v-if="field.value !== 'actions'"
+							v-slot="{ errors, validate }"
+							class="expert-item"
+							:name="field.title.toLowerCase()"
+							:rules="field.rules"
+						>
+							<slot
+								:name="'item.' + field.value"
+								v-bind:input="event_input"
+								v-bind:blur="event_blur"
+								v-bind:focus="event_focus"
+								v-bind:key_down="event_key_down"
+								v-bind:item="item_record"
+								v-bind:value="item_record[field.value]"
+								v-bind:header="field"
+								v-bind:selected="undefined"
+								v-bind:selected_row="undefined"
+								v-bind:adding="true"
+								v-bind:errors="errors"
+								v-bind:validate="validate"
+							>
+								<item-field
+									:field="field"
+									:table-name="tableName"
+									v-model="item_record[field.value]"
+								></item-field>
+							</slot>
+						</ValidationProvider>
                         <span v-else>
-                            <!-- <a-button-group>
-                                <a-tooltip>
-                                    <span slot="title">
-                                        {{ current_language.save_button_text }}
-                                    </span>
-                                    <a-button size="small" type="primary" icon="check" @click="saveTableData(false)"></a-button>
-                                </a-tooltip>
-                            </a-button-group> -->
+							<a-tooltip>
+								<span slot="title">
+									{{ current_language.add_button_text }}
+								</span>
+								<font-awesome-icon icon="save" class="expert-datatable-button" @click="modalEditItem(item_record)"></font-awesome-icon>
+							</a-tooltip>
                         </span>
                     </td>
-                </tr>
+                </ValidationObserver>
             </tbody>
         </table>
     </div>
@@ -149,6 +156,8 @@ export default /*#__PURE__*/Vue.extend({
             loading_delete: false,
             table_data: [],
             selected_row: undefined,
+            selected_index: undefined,
+            selected_field: undefined,
             item_record: {},
             item_record_before: {},
             current_language: undefined,
@@ -283,7 +292,11 @@ export default /*#__PURE__*/Vue.extend({
         },
         size: {
             type: String,
-            default: 'normal'
+            default: 'normal',
+			validator (htmlType: string) {
+				const valids = ['small', 'normal', 'large']
+				return valids.includes(htmlType)
+			}
         },
         transformData: {
             type: Function,
@@ -292,6 +305,10 @@ export default /*#__PURE__*/Vue.extend({
             }
         },
         bordered: {
+            type: Boolean,
+            default: true
+        },
+        saveOnBlur: {
             type: Boolean,
             default: true
         },
@@ -307,7 +324,7 @@ export default /*#__PURE__*/Vue.extend({
                 field.sortable = field.sortable ? field.sortable : true
                 field.width = field.width ? field.width : 'auto'
                 field.visible = field.visible ? field.visible : true
-                field.alwaysEditable = field.alwaysEditable ? field.alwaysEditable : false
+                field.editable = field.editable ? field.editable : false
                 fields.push(field)
             }
 
@@ -487,7 +504,7 @@ export default /*#__PURE__*/Vue.extend({
 					}
 				}
 			} else {
-				this.$emit('')
+				this.$emit('save-item', this.selected_row)
 			}
         },
         modalEditItem(item_record: any) {
@@ -527,26 +544,18 @@ export default /*#__PURE__*/Vue.extend({
             }
 			return undefined
         },
-        selectRow (row: any, field: FieldsInterface) {
-			console.log('select row', row)
-            if (field.fieldType !== undefined && !field.alwaysEditable) {
-                this.selected_row = JSON.parse(JSON.stringify(row))
-                this.item_record = JSON.parse(JSON.stringify(row))
-                this.item_record_before = JSON.parse(JSON.stringify(row))
-                this.$nextTick(() => {
-                    const input : any = this.$refs['input_' + field.value]
-                    if (Array.isArray(input)) {
-                        if (input[0].$el) {
-                            input[0].$el.focus()
-                        }
-                    } else {
-                        if (input.$el) {
-                            input.$el.focus()
-                        }
-                    }
-                })
+        selectRow (row: any, index: number, field: FieldsInterface) {
+            if (field.fieldType !== undefined && field.editable) {
+                this.selected_row = row
+				this.selected_index = index
+				this.selected_field = field
+				this.copyItem(row)
+				this.subscribeInputEvents()
             }
         },
+		copyItem (item: any) {
+			this.item_record_before = JSON.parse(JSON.stringify(item))
+		},
         deSelectRow () {
             console.log('click outside')
             this.selected_row = undefined
@@ -557,7 +566,76 @@ export default /*#__PURE__*/Vue.extend({
             } else {
                 return false
             }
-        }
+        },
+		cancel_editing () {
+			Object.assign(this.selected_row, this.item_record_before)
+		},
+		// inputs events
+		subscribeInputEvents () {
+			if ((this.selected_index || this.selected_index === 0) && this.selected_field) {
+				let target = this.$refs[`item_${this.selected_index}_${this.selected_field.value}`]
+				if (Array.isArray(target)) {
+					target = target[0]
+				}
+				if (target instanceof Element) {
+					const input: any = target.querySelector(`[name="${this.selected_field.value}"]`)
+					console.log('subscribeInputEvents', input)
+
+					if (input) {
+						const elementTag = input.tagName
+
+						const doesTriggerInputTags = ['INPUT', 'TEXTAREA']
+						const doesTriggerChangeTags = ['SELECT', 'DATALIST']
+						const doesTriggerEventsTags = [...doesTriggerInputTags, ...doesTriggerChangeTags]
+
+						if (doesTriggerEventsTags.includes(elementTag)) {
+							console.log('elementTag', elementTag)
+							if (doesTriggerInputTags.includes(elementTag)) {
+								input.removeEventListener('input', this.event_input)
+							}
+							if (doesTriggerChangeTags.includes(elementTag)) {
+								input.removeEventListener('change', this.event_input)
+							}
+							input.removeEventListener('focus', this.event_focus)
+							input.removeEventListener('blur', this.event_blur)
+							input.removeEventListener('keydown', this.event_key_down)
+							input.oninput = this.event_input
+							input.onfocus = this.event_focus
+							input.onblur = this.event_blur
+							input.onkeydown = this.event_key_down
+						}
+					}
+				}
+			}
+		},
+		event_input (e: any) {
+			if (this.selected_field) {
+				if (this.$scopedSlots[`item.${this.selected_field.value}`]) {
+					const inputValue = e.target.value
+					console.log('inputValue', inputValue)
+					this.selected_row[this.selected_field.value] = inputValue
+				}
+			}
+		},
+		event_focus (e: FocusEvent) {
+			console.log('event_focus', e)
+		},
+		event_blur (e: FocusEvent) {
+			console.log('event_blur', e)
+			if (this.saveOnBlur) {
+				this.saveTableData()
+			} else {
+				this.cancel_editing()
+			}
+		},
+		event_key_down (e: any) {
+			if (e.keyCode === 13 || e.which === 13) {
+                this.saveTableData()
+            }
+            if (e.keyCode === 27 || e.which === 27 || e.key === 'Escape') {
+                this.cancel_editing()
+            }
+		}
     },
 });
 </script>

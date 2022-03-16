@@ -7,7 +7,6 @@
 				v-if="test_type === 'API'"
                 :fields="fields"
                 :rest-api-url="api_url"
-                size="small"
                 lang="ES"
                 table-name="usuario"
             >
@@ -31,6 +30,10 @@
                 <template v-slot:[`item.id`]="{ value }">
                     ID: {{ value }}
                 </template>
+                <template v-slot:[`item.descripcion`]="{ value, input, focus, blur }">
+                    <!-- <input type="text" :value="value" @input="input" @focus="focus" @blur="blur"> -->
+                    <input type="text" name="descripcion" :value="value" placeholder="Descripción...">
+                </template>
             </vue-expert-datatable>
         </div>
     </div>
@@ -40,7 +43,6 @@
 import Vue from 'vue';
 import VueExpertDatatable from '@/index';
 Vue.use(VueExpertDatatable)
-import '../src/application/theme/ant-design'
 interface Data {
 	fields: Array<any>;
 	api_url: string;
@@ -63,26 +65,31 @@ export default Vue.extend({
                     align: 'left',
                     value: 'nombre',
                     fieldType: 'text',
-                    pronoun: 'un'
+                    pronoun: 'un',
+					editable: true,
+					rules: 'required'
                 },
                 {
                     title: 'Descripción',
                     align: 'left',
                     value: 'descripcion',
                     fieldType: 'text',
-                    pronoun: 'una'
+                    pronoun: 'una',
+					editable: true,
+					rules: 'required'
                 },
                 {
                     title: 'Estado',
                     align: 'left',
                     value: 'estado',
+					editable: true
                 },
                 {
                     title: 'Visible',
                     align: 'left',
                     value: 'visible',
                     fieldType: 'checkbox',
-                    alwaysEditable: true
+                    editable: true
                 }
             ],
             api_url: 'https://crudcrud.com/api/d5e1605ccb3e4c509de1c4601906f3c4/users',

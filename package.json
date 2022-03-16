@@ -21,8 +21,15 @@
     "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.1.0",
+    "@fortawesome/free-brands-svg-icons": "^6.1.0",
+    "@fortawesome/free-regular-svg-icons": "^6.1.0",
+    "@fortawesome/free-solid-svg-icons": "^6.1.0",
+    "@fortawesome/vue-fontawesome": "^2.0.6",
+    "ant-design-vue": "^1.7.8",
     "axios": "^0.21.1",
-    "core-js": "^3.14.0"
+    "core-js": "^3.14.0",
+    "vee-validate": "^3.4.14"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

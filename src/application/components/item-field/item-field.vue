@@ -5,23 +5,27 @@
             :ref="'input_' + field.value"
             v-model="localValue"
             :placeholder="inputPlaceholder(field)"
+			:field="field"
         ></expert-datatable-input>
         <a-textarea
             v-if="field.fieldType === 'longtext'"
             :ref="'input_' + field.value"
             v-model="localValue"
             :placeholder="inputPlaceholder(field)"
+			:field="field"
         ></a-textarea>
         <a-input-number
             v-if="field.fieldType === 'number'"
             :ref="'input_' + field.value"
             v-model="localValue"
             :placeholder="inputPlaceholder(field)"
+			:field="field"
         ></a-input-number>
-        <a-checkbox
+        <div
             v-if="field.fieldType === 'checkbox'"
             :ref="'input_' + field.value"
-        ></a-checkbox>
+			:field="field"
+        ></div>
     </div>
 </template>
 

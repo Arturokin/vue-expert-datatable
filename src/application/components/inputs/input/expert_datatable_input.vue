@@ -4,6 +4,7 @@
 			class="expert-datatable-input datatable-field"
 			:placeholder="placeholder"
 			:value="value"
+			:name="field.value"
 			@input="input"
 		>
 
@@ -12,7 +13,8 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Field from '@/application/interface/field';
+import Vue, { PropType } from 'vue';
 import DataInterface from './data-interface'
 
 export default /*#__PURE__*/Vue.extend({
@@ -23,6 +25,10 @@ export default /*#__PURE__*/Vue.extend({
         }
     },
     props: {
+		field: {
+            type: Object as PropType<Field>,
+            required: true
+        },
 		value: {
 			type: [String, Number],
 			default: ''
@@ -36,7 +42,7 @@ export default /*#__PURE__*/Vue.extend({
             default: 'button',
 			validator (htmlType: string) {
 				const valids = ['button', 'submit']
-				return !valids.includes(htmlType)
+				return valids.includes(htmlType)
 			}
         }
     },
@@ -50,8 +56,9 @@ export default /*#__PURE__*/Vue.extend({
         
     },
     methods: {
-        input (val: string | number) {
-			this.$emit('input', val)
+        input (e: InputEvent) {
+			const target: any = e.target
+			this.$emit('input', target ? target.value : '')
 		}
     },
 });
@@ -64,7 +71,6 @@ export default /*#__PURE__*/Vue.extend({
     margin: 0;
     padding: 0;
     color: rgba(0, 0, 0, .65);
-    font-size: 14px;
     font-variant: tabular-nums;
     line-height: 1.5;
     list-style: none;
@@ -76,8 +82,8 @@ export default /*#__PURE__*/Vue.extend({
 
 	.expert-datatable-input {
 		width: 100%;
-    	height: 32px;
-		padding: 4px 11px;
+		padding: 0;
+		background-color: transparent;
     	color: rgba(0, 0, 0, 0.65);
 		outline: none!important;
 		border: none;

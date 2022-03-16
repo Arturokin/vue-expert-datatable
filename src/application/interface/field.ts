@@ -8,6 +8,7 @@ export default interface Field {
     width?: string | number,
     visible?: boolean,
     fieldType?: 'text' | 'longtext' | 'number' | 'select' | 'range' | 'checkbox' | 'switch' | 'date' | 'datetime' | 'autocomplete' | 'custom' | undefined,
-    alwaysEditable?: boolean,
-    pronoun?: string
+    editable?: boolean,
+    pronoun?: string,
+	rules?: string;
 }
