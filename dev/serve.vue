@@ -9,6 +9,7 @@
                 :rest-api-url="api_url"
                 lang="ES"
                 table-name="usuario"
+                key="1"
             >
                 <template v-slot:[`header.actions`]="{ header }">
                     Acciones
@@ -23,6 +24,7 @@
                 size="small"
                 table-name="usuario"
 				:data="test_data"
+                :key="2"
             >
                 <template v-slot:[`header.actions`]="{ header }">
                     Acciones
@@ -32,6 +34,7 @@
                 </template>
                 <template v-slot:[`item.descripcion`]="{ value, input, focus, blur }">
                     <!-- <input type="text" :value="value" @input="input" @focus="focus" @blur="blur"> -->
+                    {{ value }}
                     <input type="text" name="descripcion" :value="value" placeholder="Descripción...">
                 </template>
             </vue-expert-datatable>

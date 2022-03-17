@@ -88,6 +88,8 @@
 							class="expert-item"
 							:name="field.title.toLowerCase()"
 							:rules="field.rules"
+                            :ref="`item_add_${field.value}`"
+                            @click.native="selectRow(undefined, undefined, field)"
 						>
 							<slot
 								:name="'item.' + field.value"
@@ -388,6 +390,12 @@ export default /*#__PURE__*/Vue.extend({
             	this.initHttpClient()
             	this.initMethods()
 			}
+            this.$nextTick(() => {
+                console.log('final_fields', this.final_fields)
+                this.final_fields.forEach((field) => {
+                    this.subscribeInputEvents(field)
+                })
+            })
         },
         initMethods() : void {
             if (this.restApiUrl) {
@@ -427,7 +435,7 @@ export default /*#__PURE__*/Vue.extend({
             this.current_language = initLanguage(this.lang, this.tableName)
             for (let index = 0; index < this.fields.length; index++) {
                 const item_field = this.fields[index];
-                this.item_record[item_field.value] = null
+                this.item_record[item_field.value] = 'TEST'
             }
         },
         cleanUrl (url: string) : string {
@@ -550,11 +558,13 @@ export default /*#__PURE__*/Vue.extend({
 				this.selected_index = index
 				this.selected_field = field
 				this.copyItem(row)
-				this.subscribeInputEvents()
+				this.subscribeInputEvents(field, index)
             }
         },
 		copyItem (item: any) {
-			this.item_record_before = JSON.parse(JSON.stringify(item))
+			if (item) {
+                this.item_record_before = JSON.parse(JSON.stringify(item))
+            }
 		},
         deSelectRow () {
             console.log('click outside')
@@ -571,15 +581,19 @@ export default /*#__PURE__*/Vue.extend({
 			Object.assign(this.selected_row, this.item_record_before)
 		},
 		// inputs events
-		subscribeInputEvents () {
-			if ((this.selected_index || this.selected_index === 0) && this.selected_field) {
-				let target = this.$refs[`item_${this.selected_index}_${this.selected_field.value}`]
+		subscribeInputEvents (field: FieldsInterface, index: number | undefined = undefined) {
+			if (field) {
+                const refName = index || index === 0 ? `item_${index}_${field.value}` : `item_add_${field.value}`
+                console.log('refName', refName)
+				let target = this.$refs[refName]
 				if (Array.isArray(target)) {
 					target = target[0]
 				}
+                if (target instanceof Vue && target) {
+                    target = (target as Vue).$el
+                }
 				if (target instanceof Element) {
-					const input: any = target.querySelector(`[name="${this.selected_field.value}"]`)
-					console.log('subscribeInputEvents', input)
+					const input: any = target.querySelector(`[name="${field.value}"]`)
 
 					if (input) {
 						const elementTag = input.tagName
@@ -589,7 +603,6 @@ export default /*#__PURE__*/Vue.extend({
 						const doesTriggerEventsTags = [...doesTriggerInputTags, ...doesTriggerChangeTags]
 
 						if (doesTriggerEventsTags.includes(elementTag)) {
-							console.log('elementTag', elementTag)
 							if (doesTriggerInputTags.includes(elementTag)) {
 								input.removeEventListener('input', this.event_input)
 							}
@@ -599,6 +612,7 @@ export default /*#__PURE__*/Vue.extend({
 							input.removeEventListener('focus', this.event_focus)
 							input.removeEventListener('blur', this.event_blur)
 							input.removeEventListener('keydown', this.event_key_down)
+                            console.log('INPUT', input)
 							input.oninput = this.event_input
 							input.onfocus = this.event_focus
 							input.onblur = this.event_blur
@@ -609,11 +623,18 @@ export default /*#__PURE__*/Vue.extend({
 			}
 		},
 		event_input (e: any) {
-			if (this.selected_field) {
-				if (this.$scopedSlots[`item.${this.selected_field.value}`]) {
+            const name = e.target.getAttribute('name')
+			if (name) {
+                console.log('name', name)
+				if (this.$scopedSlots[`item.${name}`]) {
 					const inputValue = e.target.value
-					console.log('inputValue', inputValue)
-					this.selected_row[this.selected_field.value] = inputValue
+					console.log('e.target', e.target)
+                    if (this.selected_row) {
+					    this.selected_row[name] = inputValue
+                    } else if (this.item_record) {
+					    this.item_record[name] = inputValue
+					    console.log('this.item_record[name]', this.item_record[name])
+                    }
 				}
 			}
 		},
