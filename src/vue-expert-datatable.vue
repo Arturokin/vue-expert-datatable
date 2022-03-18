@@ -35,10 +35,12 @@
 									'selected': (selected_index === index) && field.value === selected_field.value && selected_field
                                 }"
 								:ref="`item_${index}_${field.value}`"
+								:key="'expert_item_' + index + '_' + field.value" 
                                 @click="selectRow(row, index, field)"
                             >
                                 <slot 
                                     :name="'item.' + field.value"
+									v-bind:events="event_listeners_input"
                                     v-bind:input="event_input"
                                     v-bind:blur="event_blur"
                                     v-bind:focus="event_focus"
@@ -49,6 +51,7 @@
                                     v-bind:selected="(selected_index === index) && field.value === selected_field.value && selected_field"
 									v-bind:selected_row="selected_index === index"
 									v-bind:adding="false"
+									v-bind:index="index"
                                 >
 									<template v-if="field.fieldType && field.editable">
 										<item-field
@@ -79,7 +82,7 @@
                 <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row">
                     <td
                         v-for="field in final_fields.filter(x => x.visible === true)"
-                        :key="'record_item_record_' + field.value"
+                        :key="'record_add_' + field.value"
                         class="expert-column"
                     >
 						<ValidationProvider
@@ -89,10 +92,13 @@
 							:name="field.title.toLowerCase()"
 							:rules="field.rules"
                             :ref="`item_add_${field.value}`"
+							:key="'expert_item_add_' + field.value" 
                             @click.native="selectRow(undefined, undefined, field)"
 						>
 							<slot
-								:name="'item.' + field.value"
+								v-if="$scopedSlots['add.' + field.value]"
+								:name="'add.' + field.value"
+								v-bind:events="event_listeners_input"
 								v-bind:input="event_input"
 								v-bind:blur="event_blur"
 								v-bind:focus="event_focus"
@@ -105,6 +111,31 @@
 								v-bind:adding="true"
 								v-bind:errors="errors"
 								v-bind:validate="validate"
+								v-bind:index="'adding'"
+							>
+								<item-field
+									:field="field"
+									:table-name="tableName"
+									v-model="item_record[field.value]"
+								></item-field>
+							</slot>
+							<slot
+								v-else
+								:name="'item.' + field.value"
+								v-bind:events="event_listeners_input"
+								v-bind:input="event_input"
+								v-bind:blur="event_blur"
+								v-bind:focus="event_focus"
+								v-bind:key_down="event_key_down"
+								v-bind:item="item_record"
+								v-bind:value="item_record[field.value]"
+								v-bind:header="field"
+								v-bind:selected="undefined"
+								v-bind:selected_row="undefined"
+								v-bind:adding="true"
+								v-bind:errors="errors"
+								v-bind:validate="validate"
+								v-bind:index="'adding'"
 							>
 								<item-field
 									:field="field"
@@ -364,6 +395,23 @@ export default /*#__PURE__*/Vue.extend({
 				return true
 			}
 			return false
+		},
+		event_listeners_input () {
+			const context = this
+			return {
+				input: function (value: any) {
+					context.event_input(value)
+				},
+				change: function (value: any) {
+					context.event_input(value)
+				},
+				blur: function (value: any) {
+					context.event_blur(value)
+				},
+				focus: function (value: any) {
+					context.event_focus(value)
+				}
+			}
 		}
     },
     watch: {
@@ -390,12 +438,6 @@ export default /*#__PURE__*/Vue.extend({
             	this.initHttpClient()
             	this.initMethods()
 			}
-            this.$nextTick(() => {
-                console.log('final_fields', this.final_fields)
-                this.final_fields.forEach((field) => {
-                    this.subscribeInputEvents(field)
-                })
-            })
         },
         initMethods() : void {
             if (this.restApiUrl) {
@@ -558,7 +600,6 @@ export default /*#__PURE__*/Vue.extend({
 				this.selected_index = index
 				this.selected_field = field
 				this.copyItem(row)
-				this.subscribeInputEvents(field, index)
             }
         },
 		copyItem (item: any) {
@@ -580,62 +621,20 @@ export default /*#__PURE__*/Vue.extend({
 		cancel_editing () {
 			Object.assign(this.selected_row, this.item_record_before)
 		},
-		// inputs events
-		subscribeInputEvents (field: FieldsInterface, index: number | undefined = undefined) {
-			if (field) {
-                const refName = index || index === 0 ? `item_${index}_${field.value}` : `item_add_${field.value}`
-                console.log('refName', refName)
-				let target = this.$refs[refName]
-				if (Array.isArray(target)) {
-					target = target[0]
-				}
-                if (target instanceof Vue && target) {
-                    target = (target as Vue).$el
-                }
-				if (target instanceof Element) {
-					const input: any = target.querySelector(`[name="${field.value}"]`)
-
-					if (input) {
-						const elementTag = input.tagName
-
-						const doesTriggerInputTags = ['INPUT', 'TEXTAREA']
-						const doesTriggerChangeTags = ['SELECT', 'DATALIST']
-						const doesTriggerEventsTags = [...doesTriggerInputTags, ...doesTriggerChangeTags]
-
-						if (doesTriggerEventsTags.includes(elementTag)) {
-							if (doesTriggerInputTags.includes(elementTag)) {
-								input.removeEventListener('input', this.event_input)
-							}
-							if (doesTriggerChangeTags.includes(elementTag)) {
-								input.removeEventListener('change', this.event_input)
-							}
-							input.removeEventListener('focus', this.event_focus)
-							input.removeEventListener('blur', this.event_blur)
-							input.removeEventListener('keydown', this.event_key_down)
-                            console.log('INPUT', input)
-							input.oninput = this.event_input
-							input.onfocus = this.event_focus
-							input.onblur = this.event_blur
-							input.onkeydown = this.event_key_down
-						}
-					}
-				}
-			}
-		},
 		event_input (e: any) {
             const name = e.target.getAttribute('name')
+			const is_adding = this.selected_index === undefined
 			if (name) {
-                console.log('name', name)
-				if (this.$scopedSlots[`item.${name}`]) {
+				if (this.$scopedSlots[`item.${name}`] || this.$scopedSlots[`add.${name}`]) {
 					const inputValue = e.target.value
-					console.log('e.target', e.target)
-                    if (this.selected_row) {
+                    if (this.selected_row && !is_adding) {
 					    this.selected_row[name] = inputValue
-                    } else if (this.item_record) {
-					    this.item_record[name] = inputValue
-					    console.log('this.item_record[name]', this.item_record[name])
-                    }
+                    } else if (is_adding && this.item_record) {
+						this.item_record[name] = inputValue
+					}
 				}
+			} else {
+				console.error('input does not have name attribute')
 			}
 		},
 		event_focus (e: FocusEvent) {
