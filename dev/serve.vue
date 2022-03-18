@@ -32,10 +32,16 @@
                 <template v-slot:[`item.id`]="{ value }">
                     ID: {{ value }}
                 </template>
-                <template v-slot:[`item.descripcion`]="{ value, input, focus, blur }">
-                    <!-- <input type="text" :value="value" @input="input" @focus="focus" @blur="blur"> -->
-                    {{ value }}
-                    <input type="text" name="descripcion" :value="value" placeholder="Descripción...">
+                <template v-slot:[`item.nombre`]="{ value, show }">
+                    <span v-show="show">{{ value }}</span>
+                </template>
+                <template v-slot:[`edit.descripcion`]="{ value, events }">
+                    <input type="text" :value="value" name="descripcion" v-on="events">
+                    <!-- <input type="text" name="descripcion" :value="value" placeholder="Descripción..."> -->
+                </template>
+                <template v-slot:[`add.descripcion`]="{ value, events }">
+                    <input type="text" :value="value" name="descripcion" v-on="events" @input="testEvent">
+                    <!-- <input type="text" name="descripcion" :value="value" placeholder="Descripción..."> -->
                 </template>
             </vue-expert-datatable>
         </div>
@@ -45,7 +51,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import VueExpertDatatable from '@/index';
-Vue.use(VueExpertDatatable)
+Vue.use(VueExpertDatatable, { lang: 'ES' })
 interface Data {
 	fields: Array<any>;
 	api_url: string;
@@ -115,6 +121,11 @@ export default Vue.extend({
 			]
         }
     },
+	methods: {
+		testEvent (e: any) {
+			console.log('testEvent', e)
+		}
+	},
 });
 </script>
 

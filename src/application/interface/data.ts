@@ -18,9 +18,12 @@ export default interface Data {
     loading_delete: boolean,
     table_data: any[],
     selected_row: any,
+    selected_row_before: any,
     selected_index?: number,
     selected_field?: Field,
     item_record: any,
     item_record_before: any,
-    current_language: Language | undefined
+    item_record_default: any,
+    current_language: Language | undefined,
+	is_canceling: boolean
 }

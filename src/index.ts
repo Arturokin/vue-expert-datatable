@@ -3,7 +3,7 @@ import Configuration from "./application/interface/configuration";
 import VueExpertDatatable from './vue-expert-datatable.vue'
 import ClickOutside from './application/components/click-outside'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEdit, faTrash, faTrashAlt, faPlus, faSave } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faTrash, faTrashAlt, faPlus, faSave, faPen, faPenAlt } from '@fortawesome/free-solid-svg-icons'
 import { faTrashCan, faTrashAlt as faTrashRegular, faPlusSquare } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Tooltip } from 'ant-design-vue'
@@ -16,7 +16,7 @@ declare module 'vue/types/vue' {
         $expert_datatable_config: Configuration;
     }
 }
-library.add(faEdit, faTrash, faTrashAlt, faPlus, faTrashCan, faTrashRegular, faPlusSquare, faSave)
+library.add(faEdit, faTrash, faTrashAlt, faPlus, faTrashCan, faTrashRegular, faPlusSquare, faSave, faPen, faPenAlt)
 
 export function VueExpertDatatablePlugin(Vue: typeof _vue, options: Configuration | undefined = undefined): void {
     if (options === undefined) {

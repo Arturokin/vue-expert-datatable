@@ -5,6 +5,7 @@
             :class="table_class"
 			cellspacing="0"
 			rowspacing="0"
+			v-click-outside="deSelectRow"
         >
             <thead>
                 <tr>
@@ -31,15 +32,38 @@
                                 v-if="field.value !== 'actions'"
                                 class="expert-item"
                                 :class="{
-                                    'selectable': field.fieldType !== undefined,
-									'selected': (selected_index === index) && field.value === selected_field.value && selected_field
+                                    'selectable': field.fieldType !== undefined && field.editable,
+									'selected': is_selected_item(index, field)
                                 }"
 								:ref="`item_${index}_${field.value}`"
 								:key="'expert_item_' + index + '_' + field.value" 
                                 @click="selectRow(row, index, field)"
                             >
-                                <slot 
+                                <slot
                                     :name="'item.' + field.value"
+									v-bind:events="event_listeners_input"
+                                    v-bind:input="event_input"
+                                    v-bind:blur="event_blur"
+                                    v-bind:focus="event_focus"
+                                    v-bind:key_down="event_key_down"
+                                    v-bind:item="row"
+                                    v-bind:value="row[field.value]"
+                                    v-bind:header="field"
+                                    v-bind:selected="is_selected_item(index, field)"
+									v-bind:selected_row="selected_index === index"
+									v-bind:adding="false"
+									v-bind:index="index"
+									v-bind:show="!is_selected_item(index, field) || !field.editable"
+                                >
+									<template>
+										<span v-show="!is_selected_item(index, field) || !field.editable">
+											{{ row[field.value] }}
+										</span>
+									</template>
+                                </slot>
+								<slot
+									v-if="is_selected_item(index, field) && field.editable"
+                                    :name="'edit.' + field.value"
 									v-bind:events="event_listeners_input"
                                     v-bind:input="event_input"
                                     v-bind:blur="event_blur"
@@ -66,6 +90,9 @@
 										</span>
 									</template>
                                 </slot>
+								<div class="icon-editing" v-if="is_selected_item(index, field) && field.editable">
+									<font-awesome-icon icon="pen-alt"></font-awesome-icon>...
+								</div>
                             </div>
                             
                             <div v-else>
@@ -121,7 +148,7 @@
 							</slot>
 							<slot
 								v-else
-								:name="'item.' + field.value"
+								:name="'edit.' + field.value"
 								v-bind:events="event_listeners_input"
 								v-bind:input="event_input"
 								v-bind:blur="event_blur"
@@ -149,9 +176,12 @@
 								<span slot="title">
 									{{ current_language.add_button_text }}
 								</span>
-								<font-awesome-icon icon="save" class="expert-datatable-button" @click="modalEditItem(item_record)"></font-awesome-icon>
+								<font-awesome-icon icon="save" class="expert-datatable-button" @click="saveTableData(true)"></font-awesome-icon>
 							</a-tooltip>
                         </span>
+						<div class="icon-editing" v-if="is_selected_item(undefined, field) && field.editable && adding_row_selected">
+							<font-awesome-icon icon="pen-alt"></font-awesome-icon>...
+						</div>
                     </td>
                 </ValidationObserver>
             </tbody>
@@ -189,11 +219,14 @@ export default /*#__PURE__*/Vue.extend({
             loading_delete: false,
             table_data: [],
             selected_row: undefined,
+            selected_row_before: {},
             selected_index: undefined,
             selected_field: undefined,
             item_record: {},
             item_record_before: {},
+            item_record_default: {},
             current_language: undefined,
+			is_canceling: false
         }
     },
     props: {
@@ -321,7 +354,7 @@ export default /*#__PURE__*/Vue.extend({
         },
         lang: {
             type: String,
-            default: 'EN'
+            default: null
         },
         size: {
             type: String,
@@ -399,19 +432,25 @@ export default /*#__PURE__*/Vue.extend({
 		event_listeners_input () {
 			const context = this
 			return {
-				input: function (value: any) {
-					context.event_input(value)
+				input: function (e: any) {
+					context.event_input(e)
 				},
-				change: function (value: any) {
-					context.event_input(value)
+				change: function (e: any) {
+					context.event_input(e)
 				},
-				blur: function (value: any) {
-					context.event_blur(value)
+				blur: function (e: any) {
+					context.event_blur(e)
 				},
-				focus: function (value: any) {
-					context.event_focus(value)
+				focus: function (e: any) {
+					context.event_focus(e)
+				},
+				keydown: function (e: any) {
+					context.event_key_down(e)
 				}
 			}
+		},
+		adding_row_selected () : boolean {
+			return this.selected_field !== undefined && this.selected_index === undefined
 		}
     },
     watch: {
@@ -474,10 +513,15 @@ export default /*#__PURE__*/Vue.extend({
             }
         },
         initData() : void {
-            this.current_language = initLanguage(this.lang, this.tableName)
+			if (this.lang) {
+            	this.current_language = initLanguage(this.lang, this.tableName)
+			} else {
+				this.current_language = initLanguage(this.$expert_datatable_config.lang || 'EN', this.tableName)
+			}
             for (let index = 0; index < this.fields.length; index++) {
                 const item_field = this.fields[index];
-                this.item_record[item_field.value] = 'TEST'
+                this.item_record[item_field.value] = ''
+                this.item_record_default[item_field.value] = ''
             }
         },
         cleanUrl (url: string) : string {
@@ -506,62 +550,90 @@ export default /*#__PURE__*/Vue.extend({
 				this.$emit('load-data')
 			}
         },
-        saveTableData(is_edit: boolean = true) {
-            if (this.isWithApi) {
-				if (!is_edit) {
-					if(this.add_method) {
-						this.loading_data = true
-						const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
-						if(http_method) {
-							http_method.then((result) => {
-								if (result.data.update_table || result.data[this.itemName] === undefined) {
-									this.getTableData()
-								} else {
-									const item: any = result.data[this.itemName]
-									this.table_data.push(item)
-									this.$emit('updated-data', this.table_data)
-								}
-								this.$emit('inserted-item', result.data[this.itemName])
-							})
-								.catch((error) => {
-									this.$emit('error', error)
-								})
-						}
-					} else {
-						console.error('you haven\'t provided an add method')
-					}
-				} else {
-					if(this.update_method) {
-						this.loading_data = true
-						const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
-						if(http_method) {
-							http_method.then((result) => {
-								if (result.data.update_table || result.data[this.itemName] === undefined) {
-									this.getTableData()
-								} else {
-									const item: any = result.data[this.itemName]
-									this.table_data.push(item)
-									this.$emit('updated-data', this.table_data)
-								}
-								this.$emit('updated-item', result.data[this.itemName])
-							})
-								.catch((error) => {
-									this.$emit('error', error)
-								})
-						}
-					} else {
-						console.error('you haven\'t provided an update method')
-					}
+        saveTableData(is_adding = false) {
+			return new Promise((resolve) => {
+				if (this.is_canceling) {
+					return resolve(undefined)
 				}
-			} else {
-				this.$emit('save-item', this.selected_row)
-			}
+				const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}`
+				const form: any = this.$refs[formName]
+				form.validate().then((result: boolean) => {
+					if (result) {
+						if (is_adding) {
+							if (this.isWithApi) {
+								if(this.add_method) {
+									this.loading_data = true
+									const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
+									if(http_method) {
+										http_method.then((result) => {
+											if (result.data.update_table || result.data[this.itemName] === undefined) {
+												this.getTableData()
+											} else {
+												const item: any = result.data[this.itemName]
+												this.table_data.push(item)
+												this.$emit('updated-data', this.table_data)
+												this.$emit('inserted-item', item)
+											}
+											return resolve(JSON.parse(JSON.stringify(this.item_record)))
+										})
+											.catch((error) => {
+												this.item_record = Object.assign({}, this.item_record_before)
+												this.$emit('error', error)
+												return resolve(undefined)
+											})
+									}
+								} else {
+									console.error('you haven\'t provided an add method')
+								}
+							} else {
+								this.table_data.push(JSON.parse(JSON.stringify(this.item_record)))
+								this.item_record = Object.assign({}, this.item_record_default)
+								this.$emit('updated-data', this.table_data)
+								this.$emit('added-item', this.selected_row)
+								return resolve(JSON.parse(JSON.stringify(this.item_record)))
+							}
+						} else {
+							if (this.isWithApi) {
+								if(this.update_method) {
+									this.loading_data = true
+									const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
+									if(http_method) {
+										http_method.then((result) => {
+											if (result.data.update_table || result.data[this.itemName] === undefined) {
+												this.getTableData()
+											} else {
+												this.$emit('updated-data', this.table_data)
+											}
+											this.$emit('updated-item', result.data[this.itemName])
+											return resolve(JSON.parse(JSON.stringify(result.data[this.itemName])))
+										})
+											.catch((error) => {
+												this.selected_row = Object.assign({}, this.selected_row_before)
+												this.$emit('error', error)
+												return resolve(undefined)
+											})
+									}
+								} else {
+									console.error('you haven\'t provided an update method')
+								}
+							} else {
+								this.$emit('updated-data', this.table_data)
+								this.$emit('updated-item', this.selected_row)
+								return resolve(JSON.parse(JSON.stringify(this.selected_row)))
+							}
+						}
+					} else {
+						console.log('Campos requeridos')
+					}
+				})
+				
+			})
         },
         modalEditItem(item_record: any) {
-            this.item_record = item_record
+			this.$emit('edit-item', item_record)
         },
         modalDeleteItem(item_record: any) {
-            this.item_record = item_record
+			this.$emit('delete-item', item_record)
         },
         getHttpByMethod(method: MethodInterface) {
             if(this.http_client) {
@@ -595,22 +667,53 @@ export default /*#__PURE__*/Vue.extend({
 			return undefined
         },
         selectRow (row: any, index: number, field: FieldsInterface) {
-            if (field.fieldType !== undefined && field.editable) {
-                this.selected_row = row
-				this.selected_index = index
-				this.selected_field = field
-				this.copyItem(row)
-            }
+            this.$nextTick(() => {
+				if (field.fieldType !== undefined && field.editable) {
+					this.selected_row = row
+					this.selected_index = index
+					this.selected_field = field
+					this.copyItem(row)
+					this.focusSelectedInput(field, index)
+				} else {
+					this.deSelectRow()
+				}
+			})
         },
 		copyItem (item: any) {
-			if (item) {
-                this.item_record_before = JSON.parse(JSON.stringify(item))
-            }
+			if (this.adding_row_selected) {
+				this.item_record_before = JSON.parse(JSON.stringify(this.item_record))
+			} else {
+				if (item) {
+					this.selected_row_before = JSON.parse(JSON.stringify(item))
+				}
+			}
 		},
         deSelectRow () {
-            console.log('click outside')
+			this.selected_field = undefined
             this.selected_row = undefined
+			this.selected_index = undefined
         },
+		focusSelectedInput (field: FieldsInterface, index: number | undefined = undefined) {
+			this.$nextTick(() => {
+				if (field && (index || index === 0)) {
+					const refName = `item_${index}_${field.value}`
+					let target = this.$refs[refName]
+					if (Array.isArray(target)) {
+						target = target[0]
+					}
+					if (target instanceof Vue && target) {
+						target = (target as Vue).$el
+					}
+					if (target instanceof Element) {
+						const input: any = target.querySelector(`[name="${field.value}"]`)
+
+						if (input && input.focus) {
+							input.focus()
+						}
+					}
+				}
+			})
+		},
         is_selected_row (row: any) {
             if (this.selected_row !== undefined) {
                 return this.selected_row[this.keyName] == row[this.keyName]
@@ -619,7 +722,13 @@ export default /*#__PURE__*/Vue.extend({
             }
         },
 		cancel_editing () {
-			Object.assign(this.selected_row, this.item_record_before)
+			this.is_canceling = true
+			if (this.adding_row_selected) {
+				Object.assign(this.item_record, this.item_record_default)
+			} else {
+				Object.assign(this.selected_row, this.selected_row_before)
+				this.deSelectRow()
+			}
 		},
 		event_input (e: any) {
             const name = e.target.getAttribute('name')
@@ -629,7 +738,7 @@ export default /*#__PURE__*/Vue.extend({
 					const inputValue = e.target.value
                     if (this.selected_row && !is_adding) {
 					    this.selected_row[name] = inputValue
-                    } else if (is_adding && this.item_record) {
+                    } else if (is_adding && this.item_record && this.adding_row_selected) {
 						this.item_record[name] = inputValue
 					}
 				}
@@ -640,21 +749,29 @@ export default /*#__PURE__*/Vue.extend({
 		event_focus (e: FocusEvent) {
 			console.log('event_focus', e)
 		},
-		event_blur (e: FocusEvent) {
-			console.log('event_blur', e)
-			if (this.saveOnBlur) {
-				this.saveTableData()
-			} else {
-				this.cancel_editing()
+		async event_blur (e: FocusEvent) {
+			if (!this.adding_row_selected && !this.is_canceling) {
+				if (this.saveOnBlur) {
+					await this.saveTableData()
+				} else {
+					this.cancel_editing()
+				}
 			}
+			this.is_canceling = false
 		},
 		event_key_down (e: any) {
-			if (e.keyCode === 13 || e.which === 13) {
+			if ((e.keyCode === 13 || e.which === 13) && !this.adding_row_selected) {
                 this.saveTableData()
             }
             if (e.keyCode === 27 || e.which === 27 || e.key === 'Escape') {
                 this.cancel_editing()
             }
+		},
+		is_selected_item (index: number | undefined, field: FieldsInterface) {
+			if ((this.selected_index === index) && this.selected_field && field.value === this.selected_field.value) {
+				return true
+			}
+			return false
 		}
     },
 });
