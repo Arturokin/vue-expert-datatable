@@ -50,7 +50,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import VueExpertDatatable from '@/index';
+import VueExpertDatatable from '@/entry.esm';
 Vue.use(VueExpertDatatable, { lang: 'ES' })
 interface Data {
 	fields: Array<any>;

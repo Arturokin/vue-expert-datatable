@@ -19,14 +19,22 @@ declare module 'vue/types/vue' {
 library.add(faEdit, faTrash, faTrashAlt, faPlus, faTrashCan, faTrashRegular, faPlusSquare, faSave, faPen, faPenAlt)
 
 export function VueExpertDatatablePlugin(Vue: typeof _vue, options: Configuration | undefined = undefined): void {
-    if (options === undefined) {
+    if (!options) {
         options = {
-            lang: 'ES',
+            lang: 'EN',
             theme: 'vue-expert-datatable'
         }
+    } else {
+        if (!options.lang) {
+            options.lang = 'EN'
+        }
+        if (!options.theme) {
+            options.theme = 'vue-expert-datatable'
+        }
     }
-    Validator(options.lang)
     Vue.prototype.$expert_datatable_config = options;
+    console.log('options', Vue.prototype.$expert_datatable_config, options)
+    Validator(options.lang)
     Vue.component('vue-expert-datatable', VueExpertDatatable)
     Vue.directive('click-outside', ClickOutside)
     Vue.component('FontAwesomeIcon', FontAwesomeIcon)

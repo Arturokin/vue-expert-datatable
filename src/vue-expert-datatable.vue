@@ -750,6 +750,7 @@ export default /*#__PURE__*/Vue.extend({
 			console.log('event_focus', e)
 		},
 		async event_blur (e: FocusEvent) {
+            console.log('blur', e)
 			if (!this.adding_row_selected && !this.is_canceling) {
 				if (this.saveOnBlur) {
 					await this.saveTableData()
