@@ -1,4 +1,5 @@
 package-lock.json
+build/*
 !build/roolup.config.js
 dist/*
 node_modules
