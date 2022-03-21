@@ -6,6 +6,9 @@
             v-model="localValue"
             :placeholder="inputPlaceholder(field)"
 			:field="field"
+			@blur="event_blur"
+			@focus="event_focus"
+			@keydown="event_key_down"
         ></expert-datatable-input>
         <a-textarea
             v-if="field.fieldType === 'longtext'"
@@ -13,6 +16,9 @@
             v-model="localValue"
             :placeholder="inputPlaceholder(field)"
 			:field="field"
+			@blur="event_blur"
+			@focus="event_focus"
+			@keydown="event_key_down"
         ></a-textarea>
         <a-input-number
             v-if="field.fieldType === 'number'"
@@ -20,11 +26,17 @@
             v-model="localValue"
             :placeholder="inputPlaceholder(field)"
 			:field="field"
+			@blur="event_blur"
+			@focus="event_focus"
+			@keydown="event_key_down"
         ></a-input-number>
         <div
             v-if="field.fieldType === 'checkbox'"
             :ref="'input_' + field.value"
 			:field="field"
+			@blur="event_blur"
+			@focus="event_focus"
+			@keydown="event_key_down"
         ></div>
     </div>
 </template>
@@ -81,7 +93,16 @@ export default /*#__PURE__*/Vue.extend({
             let text = this.language.input_placeholder.replace(' {pronoun} ', field.pronoun ? ` ${field.pronoun} ` : ' ')
             text = text.replace('{value}', field.value)
             return text
-        }
+        },
+		event_focus (e: FocusEvent) {
+			this.$emit('focus', e)
+		},
+		event_blur (e: FocusEvent) {
+			this.$emit('blur', e)
+		},
+		event_key_down (e: any) {
+			this.$emit('keydown', e)
+		}
     },
 });
 </script>

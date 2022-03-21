@@ -82,6 +82,9 @@
 											:field="field"
 											:table-name="tableName"
 											v-model="row[field.value]"
+											@blur="event_blur"
+											@focus="event_focus"
+											@keydown="event_key_down"
 										></item-field>
 									</template>
 									<template v-else>
@@ -144,6 +147,9 @@
 									:field="field"
 									:table-name="tableName"
 									v-model="item_record[field.value]"
+									@blur="event_blur"
+									@focus="event_focus"
+									@keydown="event_key_down"
 								></item-field>
 							</slot>
 							<slot
@@ -168,6 +174,9 @@
 									:field="field"
 									:table-name="tableName"
 									v-model="item_record[field.value]"
+									@blur="event_blur"
+									@focus="event_focus"
+									@keydown="event_key_down"
 								></item-field>
 							</slot>
 						</ValidationProvider>
@@ -574,7 +583,7 @@ export default /*#__PURE__*/Vue.extend({
 												this.$emit('updated-data', this.table_data)
 												this.$emit('inserted-item', item)
 											}
-											return resolve(JSON.parse(JSON.stringify(this.item_record)))
+											return resolve(this.item_record)
 										})
 											.catch((error) => {
 												this.item_record = Object.assign({}, this.item_record_before)
@@ -590,7 +599,7 @@ export default /*#__PURE__*/Vue.extend({
 								this.item_record = Object.assign({}, this.item_record_default)
 								this.$emit('updated-data', this.table_data)
 								this.$emit('added-item', this.selected_row)
-								return resolve(JSON.parse(JSON.stringify(this.item_record)))
+								return resolve(this.item_record)
 							}
 						} else {
 							if (this.isWithApi) {
@@ -605,7 +614,7 @@ export default /*#__PURE__*/Vue.extend({
 												this.$emit('updated-data', this.table_data)
 											}
 											this.$emit('updated-item', result.data[this.itemName])
-											return resolve(JSON.parse(JSON.stringify(result.data[this.itemName])))
+											return resolve(result.data[this.itemName])
 										})
 											.catch((error) => {
 												this.selected_row = Object.assign({}, this.selected_row_before)
@@ -619,7 +628,7 @@ export default /*#__PURE__*/Vue.extend({
 							} else {
 								this.$emit('updated-data', this.table_data)
 								this.$emit('updated-item', this.selected_row)
-								return resolve(JSON.parse(JSON.stringify(this.selected_row)))
+								return resolve(this.selected_row)
 							}
 						}
 					} else {
@@ -761,8 +770,8 @@ export default /*#__PURE__*/Vue.extend({
 			this.is_canceling = false
 		},
 		event_key_down (e: any) {
-			if ((e.keyCode === 13 || e.which === 13) && !this.adding_row_selected) {
-                this.saveTableData()
+			if (e.keyCode === 13 || e.which === 13) {
+                this.saveTableData(this.adding_row_selected !== undefined)
             }
             if (e.keyCode === 27 || e.which === 27 || e.key === 'Escape') {
                 this.cancel_editing()

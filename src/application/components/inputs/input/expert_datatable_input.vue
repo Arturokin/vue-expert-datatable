@@ -6,6 +6,9 @@
 			:value="value"
 			:name="field.value"
 			@input="input"
+			@blur="event_blur"
+			@focus="event_focus"
+			@keydown="event_key_down"
 		>
 
 		</input>
@@ -59,6 +62,15 @@ export default /*#__PURE__*/Vue.extend({
         input (e: InputEvent) {
 			const target: any = e.target
 			this.$emit('input', target ? target.value : '')
+		},
+		event_focus (e: FocusEvent) {
+			this.$emit('focus', e)
+		},
+		event_blur (e: FocusEvent) {
+			this.$emit('blur', e)
+		},
+		event_key_down (e: any) {
+			this.$emit('keydown', e)
 		}
     },
 });
