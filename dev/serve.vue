@@ -88,6 +88,18 @@ export default Vue.extend({
 					rules: 'required'
                 },
                 {
+                    title: 'Monto',
+                    align: 'left',
+                    value: 'monto',
+                    fieldType: 'autonumeric',
+                    pronoun: 'el',
+					editable: true,
+					rules: 'required|numeric',
+					fieldData: {
+						useDollarSign: true
+					}
+                },
+                {
                     title: 'Estado',
                     align: 'left',
                     value: 'estado',

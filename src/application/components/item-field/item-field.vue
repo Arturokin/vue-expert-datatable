@@ -30,6 +30,16 @@
 			@focus="event_focus"
 			@keydown="event_key_down"
         ></a-input-number>
+        <expert-datatable-autonumeric
+            v-if="field.fieldType === 'autonumeric'"
+            :ref="'input_' + field.value"
+            v-model="localValue"
+            :placeholder="inputPlaceholder(field)"
+			:field="field"
+			@blur="event_blur"
+			@focus="event_focus"
+			@keydown="event_key_down"
+        ></expert-datatable-autonumeric>
         <div
             v-if="field.fieldType === 'checkbox'"
             :ref="'input_' + field.value"
@@ -49,11 +59,15 @@ import enEN from '../../language/en-EN'
 import initLanguage from '../../language/init-language'
 
 import ExpertDatatableInput from '../inputs/input/expert_datatable_input.vue'
+import ExpertDatatableInputNumber from '../inputs/input-number/expert_datatable_input_number.vue'
+import ExpertDatatableAutonumeric from '../inputs/auto-numeric/expert_datatable_auto_numeric.vue'
 
 export default /*#__PURE__*/Vue.extend({
     name: 'ExpertDatatableItemField',
 	components: {
-		'expert-datatable-input': ExpertDatatableInput
+		'expert-datatable-input': ExpertDatatableInput,
+		'expert-datatable-input-number': ExpertDatatableInputNumber,
+		'expert-datatable-autonumeric': ExpertDatatableAutonumeric
 	},
     data(): DataInterface {
         return {

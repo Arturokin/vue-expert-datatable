@@ -400,6 +400,8 @@ export default /*#__PURE__*/Vue.extend({
                 field.width = field.width ? field.width : 'auto'
                 field.visible = field.visible ? field.visible : true
                 field.editable = field.editable ? field.editable : false
+                field.fieldType = field.fieldType ? field.fieldType : undefined
+                field.fieldData = field.fieldData ? field.fieldData : undefined
                 fields.push(field)
             }
 
