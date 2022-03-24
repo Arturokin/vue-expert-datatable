@@ -49,15 +49,6 @@ export default /*#__PURE__*/Vue.extend({
 			}
         }
     },
-    watch: {
-        
-    },
-    beforeMount() {
-        
-    },
-    mounted() {
-        
-    },
     methods: {
         input (e: InputEvent) {
 			const target: any = e.target

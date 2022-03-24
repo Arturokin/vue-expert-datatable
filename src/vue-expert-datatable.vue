@@ -18,7 +18,9 @@
             </thead>
             <tbody>
                 <template v-for="(row, index) in table_data">
-                    <tr
+                    <ValidationObserver
+						tag="tr"
+						:ref="'form_edit_item_' + index"
 						:key="'record_' + index"
 						class="expert-row"
 						:class="{ 'selected': (selected_index === index) }"
@@ -28,41 +30,47 @@
                             :key="'record_' + index + '_' + field.value"
                             class="expert-column"
                         >
-                            <div 
+                            <ValidationProvider 
                                 v-if="field.value !== 'actions'"
                                 class="expert-item"
                                 :class="{
                                     'selectable': field.fieldType !== undefined && field.editable,
 									'selected': is_selected_item(index, field)
                                 }"
+								v-slot="{ errors, validate }"
 								:ref="`item_${index}_${field.value}`"
 								:key="'expert_item_' + index + '_' + field.value" 
-                                @click="selectRow(row, index, field)"
+                                @click.native="selectRow(row, index, field)"
                             >
-                                <slot
-                                    :name="'item.' + field.value"
-									v-bind:events="event_listeners_input"
-                                    v-bind:input="event_input"
-                                    v-bind:blur="event_blur"
-                                    v-bind:focus="event_focus"
-                                    v-bind:key_down="event_key_down"
-                                    v-bind:item="row"
-                                    v-bind:value="row[field.value]"
-                                    v-bind:header="field"
-                                    v-bind:selected="is_selected_item(index, field)"
-									v-bind:selected_row="selected_index === index"
-									v-bind:adding="false"
-									v-bind:index="index"
-									v-bind:show="!is_selected_item(index, field) || !field.editable"
-                                >
-									<template>
-										<span v-show="!is_selected_item(index, field) || !field.editable">
-											{{ row[field.value] }}
-										</span>
-									</template>
-                                </slot>
+								<div class="expert-row-item" v-show="(!is_selected_item(index, field) || !field.editable) && !field.fieldAlwaysVisible">
+									<slot
+										:name="'item.' + field.value"
+										v-bind:events="event_listeners_input"
+										v-bind:input="event_input"
+										v-bind:blur="event_blur"
+										v-bind:focus="event_focus"
+										v-bind:key_down="event_key_down"
+										v-bind:item="row"
+										v-bind:value="row[field.value]"
+										v-bind:header="field"
+										v-bind:selected="is_selected_item(index, field)"
+										v-bind:selected_row="selected_index === index"
+										v-bind:adding="false"
+										v-bind:index="index"
+										v-bind:show="(!is_selected_item(index, field) || !field.editable) && !field.fieldAlwaysVisible"
+										v-bind:errors="errors"
+										v-bind:validate="validate"
+									>
+										<template>
+											<item-text
+												:field="field"
+												:item="row"
+											/>
+										</template>
+									</slot>
+								</div>
 								<slot
-									v-if="is_selected_item(index, field) && field.editable"
+									v-if="(is_selected_item(index, field) || field.fieldAlwaysVisible) && field.editable"
                                     :name="'edit.' + field.value"
 									v-bind:events="event_listeners_input"
                                     v-bind:input="event_input"
@@ -76,6 +84,8 @@
 									v-bind:selected_row="selected_index === index"
 									v-bind:adding="false"
 									v-bind:index="index"
+									v-bind:errors="errors"
+									v-bind:validate="validate"
                                 >
 									<template v-if="field.fieldType && field.editable">
 										<item-field
@@ -88,15 +98,16 @@
 										></item-field>
 									</template>
 									<template v-else>
-										<span>
-											{{ row[field.value] }}
-										</span>
+										<item-text
+											:field="field"
+											:item="row"
+										/>
 									</template>
                                 </slot>
 								<div class="icon-editing" v-if="is_selected_item(index, field) && field.editable">
 									<font-awesome-icon icon="pen-alt"></font-awesome-icon>...
 								</div>
-                            </div>
+                            </ValidationProvider>
                             
                             <div v-else>
 								<a-tooltip :title="current_language.edit_button_text">
@@ -107,7 +118,7 @@
 								</a-tooltip>
                             </div>
                         </td>
-                    </tr>
+                    </ValidationObserver>
                 </template>
                 <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row">
                     <td
@@ -147,6 +158,7 @@
 									:field="field"
 									:table-name="tableName"
 									v-model="item_record[field.value]"
+									is-adding
 									@blur="event_blur"
 									@focus="event_focus"
 									@keydown="event_key_down"
@@ -174,6 +186,7 @@
 									:field="field"
 									:table-name="tableName"
 									v-model="item_record[field.value]"
+									is-adding
 									@blur="event_blur"
 									@focus="event_focus"
 									@keydown="event_key_down"
@@ -206,11 +219,13 @@ import FieldsInterface from './application/interface/field'
 import MethodInterface from './application/interface/method'
 import ItemField from './application/components/item-field/item-field.vue'
 import initLanguage from './application/language/init-language'
+import ItemText from './application/components/item-text/item_text.vue'
 
 export default /*#__PURE__*/Vue.extend({
     name: 'VueExpertDatatable',
     components: {
-        'item-field': ItemField
+        'item-field': ItemField,
+		ItemText
     },
     data(): DataInterface {
         return {
@@ -387,6 +402,18 @@ export default /*#__PURE__*/Vue.extend({
             type: Boolean,
             default: true
         },
+        showAlerts: {
+            type: Boolean,
+            default: true
+        },
+        useEditModal: {
+            type: Boolean,
+            default: true
+        },
+        useDeleteModal: {
+            type: Boolean,
+            default: true
+        },
     },
     computed: {
         final_fields() : Array<FieldsInterface> {
@@ -402,6 +429,7 @@ export default /*#__PURE__*/Vue.extend({
                 field.editable = field.editable ? field.editable : false
                 field.fieldType = field.fieldType ? field.fieldType : undefined
                 field.fieldData = field.fieldData ? field.fieldData : undefined
+                field.fieldAlwaysVisible = field.fieldAlwaysVisible ? field.fieldAlwaysVisible : false
                 fields.push(field)
             }
 
@@ -415,7 +443,8 @@ export default /*#__PURE__*/Vue.extend({
                     width: 'auto',
                     title: 'Actions',
                     value: 'actions',
-                    visible: true
+                    visible: true,
+					fieldAlwaysVisible: true
                 }
                 fields.push(actions_field)
             }
@@ -567,77 +596,88 @@ export default /*#__PURE__*/Vue.extend({
 					return resolve(undefined)
 				}
 				const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}`
-				const form: any = this.$refs[formName]
-				form.validate().then((result: boolean) => {
-					if (result) {
-						if (is_adding) {
-							if (this.isWithApi) {
-								if(this.add_method) {
-									this.loading_data = true
-									const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
-									if(http_method) {
-										http_method.then((result) => {
-											if (result.data.update_table || result.data[this.itemName] === undefined) {
-												this.getTableData()
-											} else {
-												const item: any = result.data[this.itemName]
-												this.table_data.push(item)
-												this.$emit('updated-data', this.table_data)
-												this.$emit('inserted-item', item)
-											}
-											return resolve(this.item_record)
-										})
-											.catch((error) => {
-												this.item_record = Object.assign({}, this.item_record_before)
-												this.$emit('error', error)
-												return resolve(undefined)
+				let form: any = this.$refs[formName]
+				if (form) {
+					if (Array.isArray(this.$refs[formName])) {
+						form = form[0]
+					}
+					form.validate().then((result: boolean) => {
+						if (result) {
+							if (is_adding) {
+								if (this.isWithApi) {
+									if(this.add_method) {
+										this.loading_data = true
+										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
+										if(http_method) {
+											http_method.then((result) => {
+												if (result.data.update_table || result.data[this.itemName] === undefined) {
+													this.getTableData()
+												} else {
+													const item: any = result.data[this.itemName]
+													this.table_data.push(item)
+													this.$emit('updated-data', this.table_data)
+													this.$emit('inserted-item', item)
+												}
+												this.deSelectRow()
+												return resolve(this.item_record)
 											})
+												.catch((error) => {
+													this.item_record = Object.assign({}, this.item_record_before)
+													this.$emit('error', error)
+													return resolve(undefined)
+												})
+										}
+									} else {
+										console.error('you haven\'t provided an add method')
 									}
 								} else {
-									console.error('you haven\'t provided an add method')
+									this.table_data.push(JSON.parse(JSON.stringify(this.item_record)))
+									this.item_record = Object.assign({}, this.item_record_default)
+									this.$emit('updated-data', this.table_data)
+									this.$emit('added-item', this.selected_row)
+									this.deSelectRow()
+									return resolve(this.item_record)
 								}
 							} else {
-								this.table_data.push(JSON.parse(JSON.stringify(this.item_record)))
-								this.item_record = Object.assign({}, this.item_record_default)
-								this.$emit('updated-data', this.table_data)
-								this.$emit('added-item', this.selected_row)
-								return resolve(this.item_record)
+								if (this.isWithApi) {
+									if(this.update_method) {
+										this.loading_data = true
+										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
+										if(http_method) {
+											http_method.then((result) => {
+												if (result.data.update_table || result.data[this.itemName] === undefined) {
+													this.getTableData()
+												} else {
+													this.$emit('updated-data', this.table_data)
+												}
+												this.$emit('updated-item', result.data[this.itemName])
+												this.deSelectRow()
+												return resolve(result.data[this.itemName])
+											})
+												.catch((error) => {
+													this.selected_row = Object.assign({}, this.selected_row_before)
+													this.$emit('error', error)
+													return resolve(undefined)
+												})
+										}
+									} else {
+										console.error('you haven\'t provided an update method')
+									}
+								} else {
+									this.$emit('updated-data', this.table_data)
+									this.$emit('updated-item', this.selected_row)
+									this.deSelectRow()
+									return resolve(this.selected_row)
+								}
 							}
 						} else {
-							if (this.isWithApi) {
-								if(this.update_method) {
-									this.loading_data = true
-									const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
-									if(http_method) {
-										http_method.then((result) => {
-											if (result.data.update_table || result.data[this.itemName] === undefined) {
-												this.getTableData()
-											} else {
-												this.$emit('updated-data', this.table_data)
-											}
-											this.$emit('updated-item', result.data[this.itemName])
-											return resolve(result.data[this.itemName])
-										})
-											.catch((error) => {
-												this.selected_row = Object.assign({}, this.selected_row_before)
-												this.$emit('error', error)
-												return resolve(undefined)
-											})
-									}
-								} else {
-									console.error('you haven\'t provided an update method')
-								}
-							} else {
-								this.$emit('updated-data', this.table_data)
-								this.$emit('updated-item', this.selected_row)
-								return resolve(this.selected_row)
-							}
+							this.$emit('message', this.current_language?.fill_required_fields)
+							return resolve(undefined)
 						}
-					} else {
-						console.log('Campos requeridos')
-					}
-				})
-				
+					})
+				} else {
+					return resolve(undefined)
+				}
 			})
         },
         modalEditItem(item_record: any) {
@@ -757,11 +797,9 @@ export default /*#__PURE__*/Vue.extend({
 				console.error('input does not have name attribute')
 			}
 		},
-		event_focus (e: FocusEvent) {
-			console.log('event_focus', e)
+		event_focus (_e: FocusEvent) {
 		},
-		async event_blur (e: FocusEvent) {
-            console.log('blur', e)
+		async event_blur (_e: FocusEvent) {
 			if (!this.adding_row_selected && !this.is_canceling) {
 				if (this.saveOnBlur) {
 					await this.saveTableData()

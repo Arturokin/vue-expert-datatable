@@ -12,4 +12,6 @@ export default interface Language {
     rule_min: string;
     rule_max: string;
 	rule_url: string;
+	// messages
+	fill_required_fields: string;
 }

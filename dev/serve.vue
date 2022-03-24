@@ -40,7 +40,7 @@
                     <!-- <input type="text" name="descripcion" :value="value" placeholder="Descripción..."> -->
                 </template>
                 <template v-slot:[`add.descripcion`]="{ value, events }">
-                    <input type="text" :value="value" name="descripcion" v-on="events" @input="testEvent">
+                    <input type="text" :value="value" name="descripcion" v-on="events">
                     <!-- <input type="text" name="descripcion" :value="value" placeholder="Descripción..."> -->
                 </template>
             </vue-expert-datatable>
@@ -100,6 +100,41 @@ export default Vue.extend({
 					}
                 },
                 {
+                    title: 'Tipo',
+                    align: 'left',
+                    value: 'tipo_id',
+                    fieldType: 'select',
+                    pronoun: 'el',
+					editable: true,
+					rules: 'required',
+					selectData: {
+						items: [
+							{
+								text: 'Tipo 1',
+								value: '1'
+							},
+							{
+								text: 'Tipo 2',
+								value: '2'
+							},
+							{
+								text: 'Tipo 3',
+								value: '3'
+							},
+							{
+								text: 'Tipo 4',
+								value: '4'
+							},
+							{
+								text: 'Tipo 5',
+								value: '5'
+							}
+						],
+						itemText: 'text',
+						itemValue: 'value'
+					}
+                },
+                {
                     title: 'Estado',
                     align: 'left',
                     value: 'estado',
@@ -134,9 +169,6 @@ export default Vue.extend({
         }
     },
 	methods: {
-		testEvent (e: any) {
-			console.log('testEvent', e)
-		}
 	},
 });
 </script>
