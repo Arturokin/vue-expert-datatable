@@ -14,6 +14,19 @@ $font-size-large: 19px;
 		font-family: 'Roboto', sans-serif;
 	}
     width: 100%;
+
+	.align-left {
+		text-align: left;
+	}
+
+	.align-center {
+		text-align: center;
+	}
+
+	.align-right {
+		text-align: right;
+	}
+
     .expert-datatable {
         border-collapse: separate;
         border-spacing: 0;

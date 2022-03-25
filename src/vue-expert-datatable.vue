@@ -29,6 +29,7 @@
                             v-for="field in final_fields.filter(x => x.visible === true)"
                             :key="'record_' + index + '_' + field.value"
                             class="expert-column"
+							:class="[`align-${field.align}`]"
                         >
                             <ValidationProvider 
                                 v-if="field.value !== 'actions'"
