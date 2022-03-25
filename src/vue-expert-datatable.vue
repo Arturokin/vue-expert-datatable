@@ -782,20 +782,27 @@ export default /*#__PURE__*/Vue.extend({
 			}
 		},
 		event_input (e: any) {
-            const name = e.target.getAttribute('name')
-			const is_adding = this.selected_index === undefined
-			if (name) {
-				if (this.$scopedSlots[`item.${name}`] || this.$scopedSlots[`add.${name}`]) {
-					const inputValue = e.target.value
-                    if (this.selected_row && !is_adding) {
-					    this.selected_row[name] = inputValue
-                    } else if (is_adding && this.item_record && this.adding_row_selected) {
-						this.item_record[name] = inputValue
-					}
-				}
-			} else {
-				console.error('input does not have name attribute')
-			}
+            if (this.selected_field) {
+                const name = this.selected_field.value
+                const is_adding = this.selected_index === undefined
+                if (name) {
+                    if (this.$scopedSlots[`edit.${name}`] || this.$scopedSlots[`add.${name}`]) {
+                        let inputValue = null
+                        if (typeof e === 'object' && e.target) {
+                            inputValue = e.target.value
+                        } else {
+                            inputValue = e
+                        }
+                        if (this.selected_row && !is_adding) {
+                            this.selected_row[name] = inputValue
+                        } else if (is_adding && this.item_record && this.adding_row_selected) {
+                            this.item_record[name] = inputValue
+                        }
+                    }
+                } else {
+                    console.error('input does not have name attribute')
+                }
+            }
 		},
 		event_focus (_e: FocusEvent) {
 		},

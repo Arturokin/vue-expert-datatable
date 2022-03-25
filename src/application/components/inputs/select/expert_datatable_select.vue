@@ -11,7 +11,7 @@
 						<span v-else>{{ selected_item }}</span>
 					</slot>
 				</div>
-				<div class="select-placeholder" v-show="!open">
+				<div class="select-placeholder" v-show="!open && !selected_item">
 					<slot name="placeholder" v-bind:item="selected_item">
 						{{ placeholder }}
 					</slot>
