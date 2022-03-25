@@ -218,6 +218,7 @@ import axios, { AxiosResponse } from 'axios'
 import DataInterface from './application/interface/data'
 import FieldsInterface from './application/interface/field'
 import MethodInterface from './application/interface/method'
+import AlertInterface from './application/interface/alert'
 import ItemField from './application/components/item-field/item-field.vue'
 import initLanguage from './application/language/init-language'
 import ItemText from './application/components/item-text/item_text.vue'
@@ -672,7 +673,11 @@ export default /*#__PURE__*/Vue.extend({
 								}
 							}
 						} else {
-							this.$emit('message', this.current_language?.fill_required_fields)
+							this.showAlert({
+								type: 'error',
+								message: this.current_language?.fill_required_fields || '',
+								code: 10
+							})
 							return resolve(undefined)
 						}
 					})
@@ -830,6 +835,12 @@ export default /*#__PURE__*/Vue.extend({
 				return true
 			}
 			return false
+		},
+		showAlert (alert: AlertInterface) {
+			if (this.showAlerts) {
+
+			}
+			this.$emit('alert', alert)
 		}
     },
 });
