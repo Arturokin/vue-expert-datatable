@@ -14,7 +14,8 @@ const language: Language = {
     rule_min: '{_field_} should have at least {length} characters',
     rule_max: '{_field_} should have at max {length} characters',
     rule_url: 'Field {_field_} must be and URL',
-	fill_required_fields: 'Fill in the required fields'
+    rule_between: 'Field {_field_} must be between {min} and {max}',
+    fill_required_fields: 'Fill in the required fields'
 }
 
 export default language

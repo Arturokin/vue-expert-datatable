@@ -162,6 +162,16 @@ $font-size-large: 19px;
 						right: 3px;
 						top: 3px;
 					}
+
+					&+.expert-column-is-invalid {
+						border-left: 1px solid #f5222d8f;
+					}
+
+					&.expert-column-is-invalid {
+						border-top: 1px solid #f5222d8f!important;
+						border-right: 1px solid #f5222d8f!important;
+						border-bottom: 1px solid #f5222d8f!important;
+					}
                 }
 
 				&:hover {

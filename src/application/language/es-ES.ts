@@ -14,6 +14,7 @@ const language: Language = {
     rule_min: '{_field_} debe tener mínimo {length} caracteres',
     rule_max: '{_field_} debe tener máximo {length} caracteres',
     rule_url: 'El campo {_field_} es debe ser un URL',
+    rule_between: 'El campo {_field_} debe estar entre {min} y {max}',
     fill_required_fields: 'Complete los campos requeridos'
 }
 
