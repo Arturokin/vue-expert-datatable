@@ -25,6 +25,7 @@
                 table-name="usuario"
 				:data="test_data"
                 :key="2"
+				@updated-data="updatedData"
             >
                 <template v-slot:[`header.actions`]="{ header }">
                     Acciones
@@ -32,8 +33,8 @@
                 <template v-slot:[`item.id`]="{ value }">
                     ID: {{ value }}
                 </template>
-                <template v-slot:[`item.nombre`]="{ value, show }">
-                    <span v-show="show">{{ value }}</span>
+                <template v-slot:[`item.nombre`]="{ value, show, events }">
+                    <span v-show="show" v-on="events">{{ value }}</span>
                 </template>
                 <template v-slot:[`edit.descripcion`]="{ value, events }">
                     <input type="text" :value="value" name="descripcion" v-on="events">
@@ -156,19 +157,26 @@ export default Vue.extend({
 					nombre: 'Prueba 1',
 					descripcion: 'Descripción de prueba...',
 					estado: 'Activo',
-					visible: true
+					visible: true,
+					monto: '',
+					tipo_id: ''
 				},
 				{
 					id: 2,
 					nombre: 'Prueba 2',
 					descripcion: 'Descripción de prueba 2...',
 					estado: 'Inactivo',
-					visible: true
+					visible: true,
+					monto: '',
+					tipo_id: ''
 				}
 			]
         }
     },
 	methods: {
+		updatedData (data: any) {
+			this.test_data = data
+		}
 	},
 });
 </script>

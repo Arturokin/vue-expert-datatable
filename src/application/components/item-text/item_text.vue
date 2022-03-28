@@ -1,12 +1,14 @@
 <template>
-	<span v-if="field.selectData && field.selectData.itemText && !field_select_selected">
-		{{ typeof item[field.value] === 'object' ? item[field.value][field.selectData.itemText] : item[field.value] }}
-	</span>
-	<span v-else-if="!field_select_selected">
-		{{ item[field.value] }}
-	</span>
-	<span v-else-if="field_select_selected">
-		{{ field_select_selected[this.field.selectData.itemText] }}
+	<span @click="clickEvent" class="expert-item-text">
+		<template v-if="field.selectData && field.selectData.itemText && !field_select_selected">
+			{{ typeof item[field.value] === 'object' ? item[field.value][field.selectData.itemText] : item[field.value] }}
+		</template>
+		<template v-else-if="!field_select_selected">
+			{{ item[field.value] }}
+		</template>
+		<template v-else-if="field_select_selected">
+			{{ field_select_selected[this.field.selectData.itemText] }}
+		</template>
 	</span>
 </template>
 
@@ -21,8 +23,10 @@ export default Vue.extend({
             required: true
         },
 		item: {
-			type: Object,
-			default: {}
+			type: Object as PropType<any>,
+			default: () => {
+				return {}
+			}
 		}
 	},
 	computed: {
@@ -30,6 +34,7 @@ export default Vue.extend({
 			if (this.field.selectData && this.field.selectData.items) {
 				if (this.field.selectData.itemValue && this.field.selectData.itemText) {
 					return this.field.selectData.items.find(x => {
+						console.log('x', x)
 						if (typeof x === 'object' && this.field.selectData && this.field.selectData.itemValue) {
 							return x[this.field.selectData.itemValue] === this.item[this.field.value]
 						} else {
@@ -43,6 +48,11 @@ export default Vue.extend({
 				}
 			}
 			return undefined
+		}
+	},
+	methods: {
+		clickEvent () {
+			this.$emit('click')
 		}
 	}
 })

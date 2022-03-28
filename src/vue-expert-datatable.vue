@@ -5,7 +5,7 @@
             :class="table_class"
 			cellspacing="0"
 			rowspacing="0"
-			v-click-outside="deSelectRow"
+			v-click-outside="event_blur"
         >
             <thead>
                 <tr>
@@ -18,115 +18,120 @@
             </thead>
             <tbody>
                 <template v-for="(row, index) in table_data">
-                    <ValidationObserver
-						tag="tr"
-						:ref="'form_edit_item_' + index"
-						:key="'record_' + index"
+					<tr
 						class="expert-row"
+						:key="'record_' + index"
 						:class="{
 							'selected': (selected_index === index)
 						}"
 					>
-                        <ValidationProvider
-                            v-for="field in final_fields.filter(x => x.visible === true)"
-                            :key="'record_' + index + '_' + field.value"
-							v-slot="{ errors, validate, classes }"
-							:name="field.title.toLowerCase()"
-							:rules="field.rules"
+						<ValidationObserver
+							v-for="field in final_fields.filter(x => x.visible === true)"
+							:key="'record_' + index + '_' + field.value"
+							:ref="'form_edit_item_' + index + '_' + field.value"
 							slim
-                        >
-                            <td class="expert-column" :class="expert_column_class(field, classes)">
-								<div
-									v-if="field.value !== 'actions'"
-									class="expert-item"
-									:class="{
-										'selectable': field.fieldType !== undefined && field.editable,
-										'selected': is_selected_item(index, field)
-									}"
-									:ref="`item_${index}_${field.value}`"
-									:key="'expert_item_' + index + '_' + field.value" 
-									@click="selectRow(row, index, field)"
-								>
-									<div class="expert-row-item" v-show="(!is_selected_item(index, field) || !field.editable) && !field.fieldAlwaysVisible">
+						>
+							<ValidationProvider
+								v-slot="{ errors, validate, classes }"
+								:name="field.title.toLowerCase()"
+								:rules="field.rules"
+								slim
+							>
+								<td class="expert-column" :class="expert_column_class(field, classes)">
+									<div
+										v-if="field.value !== 'actions'"
+										class="expert-item"
+										:class="{
+											'selectable': field.fieldType !== undefined && field.editable,
+											'selected': is_selected_item(index, field)
+										}"
+										:ref="`item_${index}_${field.value}`"
+										:key="'expert_item_' + index + '_' + field.value"
+									>
+										<div
+											class="expert-row-item"
+											v-show="(!is_selected_item(index, field) || !field.editable) && !field.fieldAlwaysVisible"
+										>
+											<slot
+												:name="'item.' + field.value"
+												v-bind:events="event_listener_item(row, index, field)"
+												v-bind:selectRow="event_select_row(row, index, field)"
+												v-bind:deselectRow="deSelectRow"
+												v-bind:item="row"
+												v-bind:value="row[field.value]"
+												v-bind:header="field"
+												v-bind:selected="is_selected_item(index, field)"
+												v-bind:selected_row="selected_index === index"
+												v-bind:adding="false"
+												v-bind:index="index"
+												v-bind:show="(!is_selected_item(index, field) || !field.editable) && !field.fieldAlwaysVisible"
+												v-bind:errors="errors"
+												v-bind:validate="validate"
+											>
+												<template>
+													<item-text
+														:field="field"
+														:item="row"
+														v-on="event_listener_item(row, index, field)"
+													/>
+												</template>
+											</slot>
+										</div>
 										<slot
-											:name="'item.' + field.value"
-											v-bind:events="event_listeners_input"
-											v-bind:input="event_input"
-											v-bind:blur="event_blur"
-											v-bind:focus="event_focus"
+											v-if="(is_selected_item(index, field) || field.fieldAlwaysVisible) && field.editable"
+											:name="'edit.' + field.value"
+											v-bind:events="event_listeners_input(row, index, field)"
+											v-bind:selectRow="event_select_row(row, index, field)"
+											v-bind:deselectRow="deSelectRow"
 											v-bind:key_down="event_key_down"
 											v-bind:item="row"
 											v-bind:value="row[field.value]"
 											v-bind:header="field"
-											v-bind:selected="is_selected_item(index, field)"
+											v-bind:selected="(selected_index === index) && field.value === selected_field.value && selected_field"
 											v-bind:selected_row="selected_index === index"
 											v-bind:adding="false"
 											v-bind:index="index"
-											v-bind:show="(!is_selected_item(index, field) || !field.editable) && !field.fieldAlwaysVisible"
 											v-bind:errors="errors"
 											v-bind:validate="validate"
 										>
-											<template>
+											<template v-if="field.fieldType && field.editable">
+												<item-field
+													:field="field"
+													:table-name="tableName"
+													:value="row[field.value]"
+													v-on="event_listeners_input(row, index, field)"
+												></item-field>
+											</template>
+											<template v-else>
 												<item-text
 													:field="field"
 													:item="row"
 												/>
 											</template>
 										</slot>
+										<div class="icon-editing" v-if="is_selected_item(index, field) && field.editable">
+											<font-awesome-icon icon="pen-alt"></font-awesome-icon>...
+										</div>
 									</div>
-									<slot
-										v-if="(is_selected_item(index, field) || field.fieldAlwaysVisible) && field.editable"
-										:name="'edit.' + field.value"
-										v-bind:events="event_listeners_input"
-										v-bind:input="event_input"
-										v-bind:blur="event_blur"
-										v-bind:focus="event_focus"
-										v-bind:key_down="event_key_down"
-										v-bind:item="row"
-										v-bind:value="row[field.value]"
-										v-bind:header="field"
-										v-bind:selected="(selected_index === index) && field.value === selected_field.value && selected_field"
-										v-bind:selected_row="selected_index === index"
-										v-bind:adding="false"
-										v-bind:index="index"
-										v-bind:errors="errors"
-										v-bind:validate="validate"
-									>
-										<template v-if="field.fieldType && field.editable">
-											<item-field
-												:field="field"
-												:table-name="tableName"
-												v-model="row[field.value]"
-												@blur="event_blur"
-												@focus="event_focus"
-												@keydown="event_key_down"
-											></item-field>
-										</template>
-										<template v-else>
-											<item-text
-												:field="field"
-												:item="row"
-											/>
-										</template>
-									</slot>
-									<div class="icon-editing" v-if="is_selected_item(index, field) && field.editable">
-										<font-awesome-icon icon="pen-alt"></font-awesome-icon>...
+									
+									<div v-else>
+										<a-tooltip :title="current_language.edit_button_text">
+											<button type="button" class="expert-datatable-action-button" @click="modalEditItem(item_record)">
+												<font-awesome-icon icon="edit"></font-awesome-icon>
+											</button>
+										</a-tooltip>
+										<a-tooltip :title="current_language.delete_button_text">
+											<button type="button" class="expert-datatable-action-button" @click="modalDeleteItem(row[field.value])">
+												<font-awesome-icon icon="trash"></font-awesome-icon>
+											</button>
+										</a-tooltip>
 									</div>
-								</div>
-								
-								<div v-else>
-									<a-tooltip :title="current_language.edit_button_text">
-										<font-awesome-icon icon="edit" class="expert-datatable-button" @click="modalEditItem(item_record)"></font-awesome-icon>
-									</a-tooltip>
-									<a-tooltip :title="current_language.delete_button_text">
-										<font-awesome-icon icon="trash" class="expert-datatable-button" @click="modalDeleteItem(row[field.value])"></font-awesome-icon>
-									</a-tooltip>
-								</div>
-							</td>
-                        </ValidationProvider>
-                    </ValidationObserver>
+								</td>
+							</ValidationProvider>
+						</ValidationObserver>
+					</tr>
                 </template>
-                <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row">
+                <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row" v-if="allowAdding">
                     <ValidationProvider
                         v-for="field in final_fields.filter(x => x.visible === true)"
                         :key="'record_add_' + field.value"
@@ -141,15 +146,13 @@
 								class="expert-item"
 								:ref="`item_add_${field.value}`"
 								:key="'expert_item_add_' + field.value"
-								@click="selectRow(undefined, undefined, field)"
 							>
 								<slot
 									v-if="$scopedSlots['add.' + field.value]"
 									:name="'add.' + field.value"
-									v-bind:events="event_listeners_input"
-									v-bind:input="event_input"
-									v-bind:blur="event_blur"
-									v-bind:focus="event_focus"
+									v-bind:events="event_listeners_input(undefined, undefined, field)"
+									v-bind:selectRow="event_select_row(undefined, undefined, field)"
+									v-bind:deselectRow="deSelectRow"
 									v-bind:key_down="event_key_down"
 									v-bind:item="item_record"
 									v-bind:value="item_record[field.value]"
@@ -164,20 +167,17 @@
 									<item-field
 										:field="field"
 										:table-name="tableName"
-										v-model="item_record[field.value]"
+										:value="item_record[field.value]"
 										is-adding
-										@blur="event_blur"
-										@focus="event_focus"
-										@keydown="event_key_down"
+										v-on="event_listeners_input(undefined, undefined, field)"
 									></item-field>
 								</slot>
 								<slot
 									v-else
 									:name="'edit.' + field.value"
-									v-bind:events="event_listeners_input"
-									v-bind:input="event_input"
-									v-bind:blur="event_blur"
-									v-bind:focus="event_focus"
+									v-bind:events="event_listeners_input(undefined, undefined, field)"
+									v-bind:selectRow="event_select_row(undefined, undefined, field)"
+									v-bind:deselectRow="deSelectRow"
 									v-bind:key_down="event_key_down"
 									v-bind:item="item_record"
 									v-bind:value="item_record[field.value]"
@@ -192,11 +192,9 @@
 									<item-field
 										:field="field"
 										:table-name="tableName"
-										v-model="item_record[field.value]"
+										:value="item_record[field.value]"
 										is-adding
-										@blur="event_blur"
-										@focus="event_focus"
-										@keydown="event_key_down"
+										v-on="event_listeners_input(undefined, undefined, field)"
 									></item-field>
 								</slot>
 							</div>
@@ -205,7 +203,9 @@
 									<span slot="title">
 										{{ current_language.add_button_text }}
 									</span>
-									<font-awesome-icon icon="save" class="expert-datatable-button" @click="saveTableData(true)"></font-awesome-icon>
+									<button type="button" class="expert-datatable-action-button" @click="saveTableData(true)">
+										<font-awesome-icon icon="save"></font-awesome-icon>
+									</button>
 								</a-tooltip>
 							</span>
 							<div class="icon-editing" v-if="is_selected_item(undefined, field) && field.editable && adding_row_selected">
@@ -423,6 +423,10 @@ export default /*#__PURE__*/Vue.extend({
             type: Boolean,
             default: true
         },
+		allowAdding: {
+			type: Boolean,
+			default: true
+		}
     },
     computed: {
         final_fields() : Array<FieldsInterface> {
@@ -435,7 +439,7 @@ export default /*#__PURE__*/Vue.extend({
                 field.sortable = field.sortable ? field.sortable : true
                 field.width = field.width ? field.width : 'auto'
                 field.visible = field.visible ? field.visible : true
-                field.editable = field.editable ? field.editable : false
+                field.editable = field.editable ? field.editable : true
                 field.fieldType = field.fieldType ? field.fieldType : undefined
                 field.fieldData = field.fieldData ? field.fieldData : undefined
                 field.fieldAlwaysVisible = field.fieldAlwaysVisible ? field.fieldAlwaysVisible : false
@@ -477,26 +481,6 @@ export default /*#__PURE__*/Vue.extend({
 				return true
 			}
 			return false
-		},
-		event_listeners_input () {
-			const context = this
-			return {
-				input: function (e: any) {
-					context.event_input(e)
-				},
-				change: function (e: any) {
-					context.event_input(e)
-				},
-				blur: function (e: any) {
-					context.event_blur(e)
-				},
-				focus: function (e: any) {
-					context.event_focus(e)
-				},
-				keydown: function (e: any) {
-					context.event_key_down(e)
-				}
-			}
 		},
 		adding_row_selected () : boolean {
 			return this.selected_field !== undefined && this.selected_index === undefined
@@ -569,8 +553,8 @@ export default /*#__PURE__*/Vue.extend({
 			}
             for (let index = 0; index < this.fields.length; index++) {
                 const item_field = this.fields[index];
-                this.item_record[item_field.value] = ''
-                this.item_record_default[item_field.value] = ''
+				Vue.set(this.item_record, item_field.value, '')
+				Vue.set(this.item_record_default, item_field.value, '')
             }
         },
         cleanUrl (url: string) : string {
@@ -604,7 +588,7 @@ export default /*#__PURE__*/Vue.extend({
 				if (this.is_canceling) {
 					return resolve(undefined)
 				}
-				const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}`
+				const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
 				let form: any = this.$refs[formName]
 				if (form) {
 					if (Array.isArray(this.$refs[formName])) {
@@ -685,6 +669,7 @@ export default /*#__PURE__*/Vue.extend({
 								message: this.current_language?.fill_required_fields || '',
 								code: 10
 							})
+							this.deSelectRow()
 							return resolve(undefined)
 						}
 					})
@@ -757,6 +742,9 @@ export default /*#__PURE__*/Vue.extend({
 			this.selected_field = undefined
             this.selected_row = undefined
 			this.selected_index = undefined
+			this.$nextTick(() => {
+				this.$forceUpdate()
+			})
         },
 		focusSelectedInput (field: FieldsInterface, index: number | undefined = undefined) {
 			this.$nextTick(() => {
@@ -800,25 +788,23 @@ export default /*#__PURE__*/Vue.extend({
                 const name = this.selected_field.value
                 const is_adding = this.selected_index === undefined
                 if (name) {
-                    if (this.$scopedSlots[`edit.${name}`] || this.$scopedSlots[`add.${name}`]) {
-                        let inputValue = null
-                        if (typeof e === 'object' && e.target) {
-                            inputValue = e.target.value
-                        } else {
-                            inputValue = e
-                        }
-                        if (this.selected_row && !is_adding) {
-                            this.selected_row[name] = inputValue
-                        } else if (is_adding && this.item_record && this.adding_row_selected) {
-                            this.item_record[name] = inputValue
-                        }
-                    }
+					let inputValue = null
+					if (typeof e === 'object' && e.target) {
+						inputValue = e.target.value
+					} else {
+						inputValue = e
+					}
+					if (this.selected_row && !is_adding) {
+						Vue.set(this.selected_row, name, inputValue)
+						// this.selected_row[name] = inputValue
+					} else if (is_adding && this.item_record && this.adding_row_selected) {
+						Vue.set(this.item_record, name, inputValue)
+						// this.item_record[name] = inputValue
+					}
                 } else {
                     console.error('input does not have name attribute')
                 }
             }
-		},
-		event_focus (_e: FocusEvent) {
 		},
 		async event_blur (_e: FocusEvent) {
 			if (!this.adding_row_selected && !this.is_canceling) {
@@ -837,6 +823,11 @@ export default /*#__PURE__*/Vue.extend({
             if (e.keyCode === 27 || e.which === 27 || e.key === 'Escape') {
                 this.cancel_editing()
             }
+		},
+		event_focus (row: any, index: number, field: FieldsInterface) {
+			if (!row && !index) {
+				this.selectRow(row, index, field)
+			}
 		},
 		is_selected_item (index: number | undefined, field: FieldsInterface) {
 			if ((this.selected_index === index) && this.selected_field && field.value === this.selected_field.value) {
@@ -863,7 +854,46 @@ export default /*#__PURE__*/Vue.extend({
 				}
 				form.reset()
 			}
-		}
+		},
+		event_listeners_input (row: any, index: number, field: FieldsInterface) : any {
+			const context = this
+			return {
+				input: function (e: any) {
+					context.event_input(e)
+				},
+				change: function (e: any) {
+					context.event_input(e)
+				},
+				blur: function (e: any) {
+					context.event_blur(e)
+				},
+				focus: function () {
+					context.event_focus(row, index, field)
+				},
+				keydown: function (e: any) {
+					context.event_key_down(e)
+				},
+				deselectRow: function () {
+					context.deSelectRow()
+				}
+			}
+		},
+		event_listener_item (row: any, index: number, field: FieldsInterface) : any {
+			const context = this
+			return {
+				click: function () {
+					context.selectRow(row, index, field)
+				}
+			}
+		},
+		event_select_row (row: any, index: number, field: FieldsInterface) : any {
+			const context = this
+			return {
+				click: function () {
+					context.selectRow(row, index, field)
+				}
+			}
+		},
     },
 });
 </script>

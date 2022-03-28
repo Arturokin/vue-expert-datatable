@@ -13,6 +13,7 @@
 			autocomplete="off"
 			:value="value"
 			@change="change"
+			@focus.native="focus"
 			@blur.native="blur"
 			@keydown.native="keyDown"
 			v-on="inputListeners"
@@ -128,6 +129,9 @@ export default /*#__PURE__*/Vue.extend({
             	this.$emit('blur', this.value)
 			}
         },
+		focus () {
+			this.$emit('focus')
+		},
         keyDown (e: any) {
             this.$emit('keydown', e)
         }

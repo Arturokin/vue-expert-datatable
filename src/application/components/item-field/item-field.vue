@@ -56,6 +56,7 @@
 				@blur="event_blur"
 				@focus="event_focus"
 				@keydown="event_key_down"
+				@deselect-row="deselectRow"
 			></expert-datatable-select>
 			<div
 				v-if="field.fieldType === 'checkbox'"
@@ -141,6 +142,9 @@ export default /*#__PURE__*/Vue.extend({
 		},
 		event_key_down (e: any) {
 			this.$emit('keydown', e)
+		},
+		deselectRow () {
+			this.$emit('deselect-row')
 		}
     },
 });

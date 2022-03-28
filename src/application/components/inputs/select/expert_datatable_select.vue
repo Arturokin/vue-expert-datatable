@@ -1,5 +1,5 @@
 <template>
-	<div class="expert-datatable-select-wrapper">
+	<div class="expert-datatable-select-wrapper" ref="main_div">
 		<div
             class="expert-datatable-select ant-input-affix-wrapper"
             :tabindex="tabIndex"
@@ -125,9 +125,12 @@ export default Vue.extend({
 		open: function (val: any) {
 			this.$emit('open', val)
 
-			if (!val) {
-				this.$emit('blur')
-			}
+			this.$nextTick(() => {
+				if (!val) {
+					this.$emit('blur')
+					this.$emit('deselect-row')
+				}
+			})
 		},
 		selected_item: function (val) {
 			this.$emit('selected-item', val)
@@ -221,7 +224,15 @@ export default Vue.extend({
 				this.openSelect(true)
 			}
 			this.changeValue(this.value)
+			if (!this.focusOnInit) {
+				this.$nextTick(() => {
+					this.addClickOutsideListener()
+				})
+			}
 		})
+	},
+	destroyed () {
+		document.body.removeEventListener('click', this.clickOutside)
 	},
 	methods: {
 		initSelectData (select_data: SelectData | undefined = undefined) {
@@ -252,6 +263,7 @@ export default Vue.extend({
 		},
 		openSelect (triggerFocus = false) {
 			this.open = true
+			this.$emit('focus')
 
 			if (triggerFocus) {
 				this.$nextTick(() => {
@@ -262,6 +274,13 @@ export default Vue.extend({
 							input.setSelectionRange(0, input.value.length)
 						}
 					}
+					this.$nextTick(() => {
+						this.addClickOutsideListener()
+					})
+				})
+			} else {
+				this.$nextTick(() => {
+					this.addClickOutsideListener()
 				})
 			}
 		},
@@ -270,8 +289,12 @@ export default Vue.extend({
 		},
 		clickItem (item: any) {
 			this.selected_item = item
-			this.open = false
-			this.search = ''
+			this.$emit('input', this.selected_value)
+			this.$emit('change', this.selected_value)
+			this.$nextTick(() => {
+				this.open = false
+				this.search = ''
+			})
 		},
 		key_item_list (item: any, index: number) {
 			if (this.select_data.itemValue) {
@@ -318,6 +341,18 @@ export default Vue.extend({
 				this.selected_item = undefined
 				this.search = ''
 			}
+		},
+		clickOutside (event: any) {
+			const el: any = this.$refs.main_div
+			console.log('click out', el, event.target)
+			if (!(el == event.target || el.contains(event.target))) {
+				this.open = false
+			}
+		},
+		addClickOutsideListener () {
+			setTimeout(() => {
+				document.body.addEventListener('click', this.clickOutside)
+			}, 1000)
 		}
     },
 })
