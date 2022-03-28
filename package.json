@@ -31,8 +31,7 @@
     "axios": "^0.21.1",
     "core-js": "^3.14.0",
     "vee-validate": "^3.4.14",
-    "vue-autonumeric": "^1.2.6",
-    "vue-imask": "^6.4.2"
+    "vue-autonumeric": "^1.2.6"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
