@@ -131,7 +131,7 @@
 						</ValidationObserver>
 					</tr>
                 </template>
-                <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row" v-if="allowAdding">
+                <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row" v-if="allowAdding" key="tr_add_1">
                     <ValidationProvider
                         v-for="field in final_fields.filter(x => x.visible === true)"
                         :key="'record_add_' + field.value"
@@ -626,10 +626,12 @@ export default /*#__PURE__*/Vue.extend({
 								} else {
 									this.table_data.push(JSON.parse(JSON.stringify(this.item_record)))
 									this.item_record = Object.assign({}, this.item_record_default)
-									this.$emit('updated-data', this.table_data)
-									this.$emit('added-item', this.selected_row)
-									this.deSelectRow()
-									return resolve(this.item_record)
+									this.$nextTick(() => {
+										this.$emit('updated-data', this.table_data)
+										this.$emit('added-item', this.selected_row)
+										this.deSelectRow()
+										return resolve(this.item_record)
+									})
 								}
 							} else {
 								if (this.isWithApi) {
@@ -739,11 +741,10 @@ export default /*#__PURE__*/Vue.extend({
 		},
         deSelectRow () {
 			this.resetForm()
-			this.selected_field = undefined
-            this.selected_row = undefined
-			this.selected_index = undefined
 			this.$nextTick(() => {
-				this.$forceUpdate()
+				this.selected_field = undefined
+				this.selected_row = undefined
+				this.selected_index = undefined
 			})
         },
 		focusSelectedInput (field: FieldsInterface, index: number | undefined = undefined) {
@@ -789,7 +790,7 @@ export default /*#__PURE__*/Vue.extend({
                 const is_adding = this.selected_index === undefined
                 if (name) {
 					let inputValue = null
-					if (typeof e === 'object' && e.target) {
+					if (typeof e === 'object' && e && e.target) {
 						inputValue = e.target.value
 					} else {
 						inputValue = e
@@ -846,13 +847,19 @@ export default /*#__PURE__*/Vue.extend({
 			return bindClasses
 		},
 		resetForm () {
-			const formName = this.adding_row_selected ? 'form_add_item' : `form_edit_item_${this.selected_index}`
+			const formName = this.adding_row_selected ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
 			let form: any = this.$refs[formName]
 			if (form) {
 				if (Array.isArray(this.$refs[formName])) {
 					form = form[0]
 				}
-				form.reset()
+				if (this.adding_row_selected) {
+					this.$nextTick(() => {
+						form.reset()
+					})
+				} else {
+					form.reset()
+				}
 			}
 		},
 		event_listeners_input (row: any, index: number, field: FieldsInterface) : any {

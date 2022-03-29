@@ -1,23 +1,31 @@
 import { DirectiveOptions } from 'vue/types/umd';
 const directive : DirectiveOptions = {
-    bind: function (el: any, binding, vnode: any) {
-        setTimeout(() => {
-            console.log('clickOutsideEvent', el)
-            el.clickOutsideEvent = function (event: any) {
-                // here I check that click was outside the el and his children
-                console.log('event.target', event.target)
-                if (!(el == event.target || el.contains(event.target))) {
-                    // and if it did, call method provided in attribute value
-                    if (vnode.context && binding.expression) {
-                        vnode.context[binding.expression](event);
-                    }
-                }
-            };
-            document.body.addEventListener('click', el.clickOutsideEvent)
-        }, 100)
+    bind: function(el: any, binding, vNode) {
+        // Provided expression must evaluate to a function.
+        if (typeof binding.value !== "function" && vNode && vNode.context) {
+            const compName = (vNode.context as any).name;
+            let warn = `[Vue-click-outside:] provided expression '${binding.expression}' is not a function, but has to be`;
+            if (compName) {
+                warn += `Found in component '${compName}'`;
+            }
+
+            console.warn(warn);
+        }
+        // Define Handler and cache it on the element
+        const bubble = binding.modifiers.bubble;
+        const handler = (e: any) => {
+            if (bubble || (!el.contains(e.target) && el !== e.target)) {
+                binding.value(e);
+            }
+        };
+        el.__vueClickOutside__ = handler;
+        // add Event Listeners
+        document.addEventListener("mousedown", handler);
     },
-    unbind: function (el: any) {
-        document.body.removeEventListener('click', el.clickOutsideEvent)
+    unbind: function(el: any) {
+        // Remove Event Listeners
+        document.removeEventListener("mousedown", el.__vueClickOutside__);
+        el.__vueClickOutside__ = null;
     }
 }
 

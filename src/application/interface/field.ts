@@ -1,6 +1,7 @@
 export interface FieldData {
 	placeholder?: string,
 	thousandSeparator?: '.' | ',', // for autonumeric,
+	decimalSeparator?: ',' | '.', // for autonumeric,
 	useDollarSign?: boolean,
 	decimals?: number,
 	min?: number

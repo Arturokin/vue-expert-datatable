@@ -1,14 +1,6 @@
 <template>
 	<span @click="clickEvent" class="expert-item-text">
-		<template v-if="field.selectData && field.selectData.itemText && !field_select_selected">
-			{{ typeof item[field.value] === 'object' ? item[field.value][field.selectData.itemText] : item[field.value] }}
-		</template>
-		<template v-else-if="!field_select_selected">
-			{{ item[field.value] }}
-		</template>
-		<template v-else-if="field_select_selected">
-			{{ field_select_selected[this.field.selectData.itemText] }}
-		</template>
+		{{ formattedText }}
 	</span>
 </template>
 
@@ -34,7 +26,6 @@ export default Vue.extend({
 			if (this.field.selectData && this.field.selectData.items) {
 				if (this.field.selectData.itemValue && this.field.selectData.itemText) {
 					return this.field.selectData.items.find(x => {
-						console.log('x', x)
 						if (typeof x === 'object' && this.field.selectData && this.field.selectData.itemValue) {
 							return x[this.field.selectData.itemValue] === this.item[this.field.value]
 						} else {
@@ -48,11 +39,40 @@ export default Vue.extend({
 				}
 			}
 			return undefined
+		},
+		formattedText () : any {
+			let formatted: any = ''
+			if (this.field.selectData && this.field.selectData.itemText && !this.field_select_selected) {
+				formatted = typeof this.item[this.field.value] === 'object' ? this.item[this.field.value][this.field.selectData.itemText] : this.item[this.field.value]
+			} else if (this.field_select_selected && this.field.selectData && this.field.selectData.itemText) {
+				formatted = this.field_select_selected[this.field.selectData.itemText]
+			} else {
+				formatted = this.item[this.field.value]
+			}
+			
+			if (this.field.fieldData) {
+				if (this.field.fieldData.thousandSeparator) {
+					formatted = this.formatNumber(formatted, this.field.fieldData.thousandSeparator)
+				}
+				if (this.field.fieldData.useDollarSign) {
+					formatted = `$${formatted}`
+				}
+			}
+			return formatted
 		}
 	},
 	methods: {
 		clickEvent () {
 			this.$emit('click')
+		},
+		formatNumber (number: any, separator: string) {
+			if (typeof number === 'undefined') {
+				return 0
+			}
+			if (!number || isNaN(parseInt(number))) {
+				return 0
+			}
+			return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, separator)
 		}
 	}
 })

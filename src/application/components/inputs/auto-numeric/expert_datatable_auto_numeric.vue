@@ -76,8 +76,8 @@ export default /*#__PURE__*/Vue.extend({
 		},
         options () : any {
             return {
-                digitGroupSeparator: '.',
-                decimalCharacter: ',',
+                digitGroupSeparator: this.thousandSeparator,
+                decimalCharacter: this.decimalSeparator,
                 currencySymbol: this.use_dollar_sign ? '$' : '',
                 currencySymbolPlacement: 'p',
                 readOnly: this.readOnly,
@@ -86,6 +86,24 @@ export default /*#__PURE__*/Vue.extend({
                 minimumValue: this.min
             }
         },
+		thousandSeparator () : '.' | ',' {
+			if (this.field.fieldData && this.field.fieldData.thousandSeparator) {
+				return this.field.fieldData.thousandSeparator
+			} else {
+				return '.'
+			}
+		},
+		decimalSeparator () : ',' | '.' {
+			if (this.field.fieldData && this.field.fieldData.decimalSeparator) {
+				return this.field.fieldData.decimalSeparator
+			} else {
+				if (this.thousandSeparator === '.') {
+					return ','
+				} else {
+					return '.'
+				}
+			}
+		},
         inputListeners: function () : any {
             const vm = this
             // `Object.assign` merges objects together to form a new object
@@ -108,9 +126,9 @@ export default /*#__PURE__*/Vue.extend({
             if (this.readOnly) {
                 clases.readonly = true
             }
-            // if (this.disabled) {
-            //     clases['ant-input-number-disabled'] = true
-            // }
+            if (this.disabled) {
+                clases['expert-disabled'] = true
+            }
             return clases
         }
 	},

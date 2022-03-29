@@ -3,6 +3,7 @@
 		<div
             class="expert-datatable-select ant-input-affix-wrapper"
             :tabindex="tabIndex"
+			v-click-outside="clickOutside"
         >
 			<div class="selected-item-div" @click="openSelect">
 				<div class="selected-item" v-show="!open && selected_item">
@@ -148,7 +149,7 @@ export default Vue.extend({
 			if (this.select_data.items) {
 				if (this.search) {
 					if (this.select_data.itemText && this.select_data.itemValue) {
-						return this.select_data.items.filter((x: any) => {
+						const filtered = this.select_data.items.filter((x: any) => {
 							let text = this.select_data.itemText ? x[this.select_data.itemText] : ''
 							let value = this.select_data.itemValue ? x[this.select_data.itemValue] : ''
 
@@ -163,8 +164,19 @@ export default Vue.extend({
 							}
 							return false
 						})
+						if (
+							filtered.length === 1 &&
+							this.selected_value
+						) {
+							if (this.select_data.itemValue && this.selected_value === filtered[0][this.select_data.itemValue]) {
+								return this.select_data.items
+							} else if (this.selected_value === filtered[0]) {
+								return this.select_data.items
+							}
+						}
+						return filtered
 					} else if (this.select_data.itemText) {
-						return this.select_data.items.filter((x: any) => {
+						const filtered = this.select_data.items.filter((x: any) => {
 							let text = this.select_data.itemText ? x[this.select_data.itemText] : ''
 							if (typeof text === 'number') {
 								text = text.toString()
@@ -174,8 +186,19 @@ export default Vue.extend({
 							}
 							return false
 						})
+						if (
+							filtered.length === 1 &&
+							this.selected_value
+						) {
+							if (this.select_data.itemValue && this.selected_value === filtered[0][this.select_data.itemValue]) {
+								return this.select_data.items
+							} else if (this.selected_value === filtered[0]) {
+								return this.select_data.items
+							}
+						}
+						return filtered
 					} else if (this.select_data.itemValue) {
-						return this.select_data.items.filter((x: any) => {
+						const filtered = this.select_data.items.filter((x: any) => {
 							let value = this.select_data.itemValue ? x[this.select_data.itemValue] : ''
 							if (typeof value === 'number') {
 								value = value.toString()
@@ -185,8 +208,19 @@ export default Vue.extend({
 							}
 							return false
 						})
+						if (
+							filtered.length === 1 &&
+							this.selected_value
+						) {
+							if (this.select_data.itemValue && this.selected_value === filtered[0][this.select_data.itemValue]) {
+								return this.select_data.items
+							} else if (this.selected_value === filtered[0]) {
+								return this.select_data.items
+							}
+						}
+						return filtered
 					} else {
-						return this.select_data.items.filter((x: any) => {
+						const filtered = this.select_data.items.filter((x: any) => {
 							if (typeof x === 'string') {
 								return x.toLowerCase().includes(this.search.toLowerCase())
 							}
@@ -194,6 +228,17 @@ export default Vue.extend({
 								return x.toString().toLowerCase().includes(this.search.toLowerCase())
 							}
 						})
+						if (
+							filtered.length === 1 &&
+							this.selected_value
+						) {
+							if (this.select_data.itemValue && this.selected_value === filtered[0][this.select_data.itemValue]) {
+								return this.select_data.items
+							} else if (this.selected_value === filtered[0]) {
+								return this.select_data.items
+							}
+						}
+						return filtered
 					}
 				} else {
 					return this.select_data.items
@@ -224,11 +269,6 @@ export default Vue.extend({
 				this.openSelect(true)
 			}
 			this.changeValue(this.value)
-			if (!this.focusOnInit) {
-				this.$nextTick(() => {
-					this.addClickOutsideListener()
-				})
-			}
 		})
 	},
 	destroyed () {
@@ -274,13 +314,6 @@ export default Vue.extend({
 							input.setSelectionRange(0, input.value.length)
 						}
 					}
-					this.$nextTick(() => {
-						this.addClickOutsideListener()
-					})
-				})
-			} else {
-				this.$nextTick(() => {
-					this.addClickOutsideListener()
 				})
 			}
 		},
@@ -342,17 +375,8 @@ export default Vue.extend({
 				this.search = ''
 			}
 		},
-		clickOutside (event: any) {
-			const el: any = this.$refs.main_div
-			console.log('click out', el, event.target)
-			if (!(el == event.target || el.contains(event.target))) {
-				this.open = false
-			}
-		},
-		addClickOutsideListener () {
-			setTimeout(() => {
-				document.body.addEventListener('click', this.clickOutside)
-			}, 1000)
+		clickOutside () {
+			this.open = false
 		}
     },
 })

@@ -97,7 +97,9 @@ export default Vue.extend({
 					editable: true,
 					rules: 'required|numeric',
 					fieldData: {
-						useDollarSign: true
+						useDollarSign: true,
+						thousandSeparator: '.',
+						decimalSeparator: ','
 					}
                 },
                 {
