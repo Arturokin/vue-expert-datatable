@@ -37,7 +37,7 @@
 								:rules="field.rules"
 								slim
 							>
-								<td class="expert-column" :class="expert_column_class(field, classes)">
+								<td class="expert-column" :class="expert_column_class(field, classes, index)">
 									<div
 										v-if="field.value !== 'actions'"
 										class="expert-item"
@@ -140,7 +140,7 @@
 						:rules="field.rules"
 						slim
                     >
-						<td class="expert-column" :class="expert_column_class(field, classes)">
+						<td class="expert-column" :class="expert_column_class(field, classes, undefined)">
 							<div
 								v-if="field.value !== 'actions'"
 								class="expert-item"
@@ -208,9 +208,6 @@
 									</button>
 								</a-tooltip>
 							</span>
-							<div class="icon-editing" v-if="is_selected_item(undefined, field) && field.editable && adding_row_selected">
-								<font-awesome-icon icon="pen-alt"></font-awesome-icon>...
-							</div>	
 						</td>
                     </ValidationProvider>
                 </ValidationObserver>
@@ -226,6 +223,7 @@ import DataInterface from './application/interface/data'
 import FieldsInterface from './application/interface/field'
 import MethodInterface from './application/interface/method'
 import AlertInterface from './application/interface/alert'
+import CustomEvents from './application/interface/custom_events'
 import ItemField from './application/components/item-field/item-field.vue'
 import initLanguage from './application/language/init-language'
 import ItemText from './application/components/item-text/item_text.vue'
@@ -426,6 +424,12 @@ export default /*#__PURE__*/Vue.extend({
 		allowAdding: {
 			type: Boolean,
 			default: true
+		},
+		customEvents: {
+			type: Object as PropType<CustomEvents>,
+			default: () : CustomEvents => {
+				return {}
+			}
 		}
     },
     computed: {
@@ -584,25 +588,33 @@ export default /*#__PURE__*/Vue.extend({
 			}
         },
         saveTableData(is_adding = false) {
-			return new Promise((resolve) => {
+			return new Promise(async (resolve) => {
 				if (this.is_canceling) {
 					return resolve(undefined)
 				}
+				console.log('saveTableData', JSON.parse(JSON.stringify(this.item_record)))
 				const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
 				let form: any = this.$refs[formName]
 				if (form) {
 					if (Array.isArray(this.$refs[formName])) {
 						form = form[0]
 					}
-					form.validate().then((result: boolean) => {
+					form.validate().then(async (result: boolean) => {
 						if (result) {
 							if (is_adding) {
 								if (this.isWithApi) {
 									if(this.add_method) {
 										this.loading_data = true
-										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method)
+										const item_record_copy = JSON.parse(JSON.stringify(this.item_record))
+										if (this.customEvents.before_add && this.selected_field) {
+											await this.customEvents.before_add(item_record_copy, this.selected_index, this.selected_field)
+										}
+										if (this.customEvents.before_save && this.selected_field) {
+											await this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field)
+										}
+										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method, item_record_copy)
 										if(http_method) {
-											http_method.then((result) => {
+											http_method.then(async (result) => {
 												if (result.data.update_table || result.data[this.itemName] === undefined) {
 													this.getTableData()
 												} else {
@@ -611,8 +623,14 @@ export default /*#__PURE__*/Vue.extend({
 													this.$emit('updated-data', this.table_data)
 													this.$emit('inserted-item', item)
 												}
+												if (this.customEvents.after_add && this.selected_field) {
+													await this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)
+												}
+												if (this.customEvents.after_save && this.selected_field) {
+													await this.customEvents.after_save(item_record_copy, this.selected_index, this.selected_field)
+												}
 												this.deSelectRow()
-												return resolve(this.item_record)
+												return resolve(item_record_copy)
 											})
 												.catch((error) => {
 													this.item_record = Object.assign({}, this.item_record_before)
@@ -624,11 +642,25 @@ export default /*#__PURE__*/Vue.extend({
 										console.error('you haven\'t provided an add method')
 									}
 								} else {
-									this.table_data.push(JSON.parse(JSON.stringify(this.item_record)))
+									const item_record_copy = JSON.parse(JSON.stringify(this.item_record))
+									if (this.customEvents.before_add && this.selected_field) {
+										await this.customEvents.before_add(item_record_copy, this.selected_index, this.selected_field)
+									}
+									if (this.customEvents.before_save && this.selected_field) {
+										await this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field)
+									}
+									console.log('item_record_copy', item_record_copy)
+									this.table_data.push(item_record_copy)
 									this.item_record = Object.assign({}, this.item_record_default)
-									this.$nextTick(() => {
+									this.$nextTick(async () => {
+										if (this.customEvents.after_add && this.selected_field) {
+											await this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)
+										}
+										if (this.customEvents.after_save && this.selected_field) {
+											await this.customEvents.after_save(item_record_copy, this.selected_index, this.selected_field)
+										}
 										this.$emit('updated-data', this.table_data)
-										this.$emit('added-item', this.selected_row)
+										this.$emit('added-item', item_record_copy)
 										this.deSelectRow()
 										return resolve(this.item_record)
 									})
@@ -637,13 +669,26 @@ export default /*#__PURE__*/Vue.extend({
 								if (this.isWithApi) {
 									if(this.update_method) {
 										this.loading_data = true
-										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method)
+										const selected_row_copy = JSON.parse(JSON.stringify(this.selected_row))
+										if (this.customEvents.before_edit && this.selected_field) {
+											await this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field)
+										}
+										if (this.customEvents.before_save && this.selected_field) {
+											await this.customEvents.before_save(selected_row_copy, this.selected_index, this.selected_field)
+										}
+										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method, selected_row_copy)
 										if(http_method) {
-											http_method.then((result) => {
+											http_method.then(async (result) => {
 												if (result.data.update_table || result.data[this.itemName] === undefined) {
 													this.getTableData()
 												} else {
 													this.$emit('updated-data', this.table_data)
+												}
+												if (this.customEvents.after_edit && this.selected_field) {
+													await this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)
+												}
+												if (this.customEvents.after_save && this.selected_field) {
+													await this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field)
 												}
 												this.$emit('updated-item', result.data[this.itemName])
 												this.deSelectRow()
@@ -659,10 +704,24 @@ export default /*#__PURE__*/Vue.extend({
 										console.error('you haven\'t provided an update method')
 									}
 								} else {
+									const selected_row_copy = JSON.parse(JSON.stringify(this.selected_row))
+									if (this.customEvents.before_edit && this.selected_field) {
+										await this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field)
+									}
+									if (this.customEvents.before_save && this.selected_field) {
+										await this.customEvents.before_save(selected_row_copy, this.selected_index, this.selected_field)
+									}
 									this.$emit('updated-data', this.table_data)
-									this.$emit('updated-item', this.selected_row)
+									this.$emit('updated-item', selected_row_copy)
+
+									if (this.customEvents.after_edit && this.selected_field) {
+										await this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)
+									}
+									if (this.customEvents.after_save && this.selected_field) {
+										await this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field)
+									}
 									this.deSelectRow()
-									return resolve(this.selected_row)
+									return resolve(selected_row_copy)
 								}
 							}
 						} else {
@@ -686,12 +745,11 @@ export default /*#__PURE__*/Vue.extend({
         modalDeleteItem(item_record: any) {
 			this.$emit('delete-item', item_record)
         },
-        getHttpByMethod(method: MethodInterface) {
+        getHttpByMethod(method: MethodInterface, data: any | undefined = undefined) {
             if(this.http_client) {
-                let data: any = this.item_record
-                data = this.transformData(data)
+                let final_data: any = this.transformData(data)
                 if (method.transformData) {
-                    data = method.transformData(data)
+                    final_data = method.transformData(final_data)
                 }
                 switch (method.type) {
                     case 'GET':
@@ -842,8 +900,11 @@ export default /*#__PURE__*/Vue.extend({
 			}
 			this.$emit('alert', alert)
 		},
-		expert_column_class(field: FieldsInterface, bindClasses: any) {
+		expert_column_class(field: FieldsInterface, bindClasses: any, index: number) {
 			bindClasses[`align-${field.align}`] = true
+			if (this.is_selected_item(index, field)) {
+				bindClasses['column-selected'] = true
+			}
 			return bindClasses
 		},
 		resetForm () {

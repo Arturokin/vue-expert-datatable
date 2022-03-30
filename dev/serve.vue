@@ -26,6 +26,7 @@
 				:data="test_data"
                 :key="2"
 				@updated-data="updatedData"
+				:custom-events="custom_events"
             >
                 <template v-slot:[`header.actions`]="{ header }">
                     Acciones
@@ -52,6 +53,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import VueExpertDatatable from '@/entry.esm';
+import Field from '@/application/interface/field';
+import CustomEvents from '@/application/interface/custom_events';
 Vue.use(VueExpertDatatable, { lang: 'ES' })
 interface Data {
 	fields: Array<any>;
@@ -90,12 +93,13 @@ export default Vue.extend({
                 },
                 {
                     title: 'Monto',
-                    align: 'left',
+                    align: 'right',
                     value: 'monto',
                     fieldType: 'autonumeric',
                     pronoun: 'el',
 					editable: true,
 					rules: 'required|numeric',
+					placeholder: 'testing',
 					fieldData: {
 						useDollarSign: true,
 						thousandSeparator: '.',
@@ -175,9 +179,25 @@ export default Vue.extend({
 			]
         }
     },
+	computed: {
+		custom_events () : CustomEvents {
+			return {
+				before_save: this.beforeSave
+			}
+		}
+	},
 	methods: {
 		updatedData (data: any) {
 			this.test_data = data
+		},
+		beforeSave (row: any, _index: number | undefined, _field: Field) : Promise<any> {
+			return new Promise((resolve) => {
+				row.id = this.getRandomArbitrary(1, 200)
+				return resolve(row)
+			})
+		},
+		getRandomArbitrary(min: number, max: number) : number {
+			return parseInt((Math.random() * (max - min) + min).toString());
 		}
 	},
 });

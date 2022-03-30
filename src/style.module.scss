@@ -154,54 +154,6 @@ $font-size-large: 19px;
                 }
             }
         }
-        tbody {
-            tr {
-                td {
-					position: relative;
-					font-family: 'Roboto', sans-serif;
-					padding: 4px 11px;
-					color: rgba(0, 0, 0, 0.65);
-					font-size: 14px;
-                    .selectable {
-                        cursor: pointer;
-                    }
-                    .expert-item {
-                        width: 100%;
-						min-height: 15px;
-                        display: inline-block;
-                    }
-
-					.focused {
-						border-color: $border-focus-color;
-						box-shadow: $box-shadow;
-					}
-
-					.icon-editing {
-						position: absolute;
-						right: 3px;
-						top: 3px;
-					}
-
-					&+.expert-column-is-invalid {
-						border-left: 1px solid #f5222d8f;
-					}
-
-					&.expert-column-is-invalid {
-						border-top: 1px solid #f5222d8f!important;
-						border-right: 1px solid #f5222d8f!important;
-						border-bottom: 1px solid #f5222d8f!important;
-					}
-                }
-
-				&:hover {
-					background-color: #eeeeee;
-				}
-
-                &.selected {
-					background-color: #e0eef9;
-                }
-            }
-        }
 
 		&.bordered {
 			tr {
@@ -218,14 +170,75 @@ $font-size-large: 19px;
                 td {
 					border-bottom: $border;
                 }
-
-                &.selected-row, &.add-item-row {
-                    
-                }
             }
 		}
 
 		.expert-column {
+			position: relative;
+			font-family: 'Roboto', sans-serif;
+			padding: 4px 11px;
+			color: rgba(0, 0, 0, 0.65);
+			font-size: 14px;
+			.selectable {
+				cursor: pointer;
+			}
+			.expert-item {
+				width: 100%;
+				min-height: 15px;
+				display: inline-block;
+			}
+
+			.focused {
+				border-color: $border-focus-color;
+				box-shadow: $box-shadow;
+			}
+
+			&.align-left {
+				.icon-editing {
+					position: absolute;
+					right: 3px;
+					top: 3px;
+				}
+			}
+
+			&.align-center {
+				.icon-editing {
+					position: absolute;
+					right: 3px;
+					top: 3px;
+				}
+			}
+
+			&.align-right {
+				.icon-editing {
+					position: absolute;
+					left: 3px;
+					top: 3px;
+				}
+			}
+
+			&+.expert-column-is-invalid {
+				border-left: 1px solid #f5222d8f;
+			}
+
+			&.expert-column-is-invalid {
+				border-top: 1px solid #f5222d8f!important;
+				border-right: 1px solid #f5222d8f!important;
+				border-bottom: 1px solid #f5222d8f!important;
+			}
+
+			&.column-selected {
+				border-bottom-color: $border-focus-color;
+			}
+
+			&:hover {
+				background-color: #eeeeee;
+			}
+
+			&.selected {
+				background-color: #e0eef9;
+			}
+
 			.expert-item {
 				.expert-row-item {
 					width: 100%;

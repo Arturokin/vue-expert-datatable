@@ -42,8 +42,13 @@ export default Vue.extend({
 		},
 		formattedText () : any {
 			let formatted: any = ''
-			if (this.field.selectData && this.field.selectData.itemText && !this.field_select_selected) {
-				formatted = typeof this.item[this.field.value] === 'object' ? this.item[this.field.value][this.field.selectData.itemText] : this.item[this.field.value]
+			if (this.field.selectData && this.field.selectData.itemText && !this.field_select_selected && this.item) {
+				const item_object = this.item[this.field.value]
+				if (item_object && typeof this.item[this.field.value] === 'object') {
+					formatted = this.item[this.field.value][this.field.selectData.itemText]
+				} else {
+					formatted = this.item[this.field.value]
+				}
 			} else if (this.field_select_selected && this.field.selectData && this.field.selectData.itemText) {
 				formatted = this.field_select_selected[this.field.selectData.itemText]
 			} else {

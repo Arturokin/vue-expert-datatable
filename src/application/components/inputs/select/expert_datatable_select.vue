@@ -4,6 +4,7 @@
             class="expert-datatable-select ant-input-affix-wrapper"
             :tabindex="tabIndex"
 			v-click-outside="clickOutside"
+			@focus="focusMainDiv"
         >
 			<div class="selected-item-div" @click="openSelect">
 				<div class="selected-item" v-show="!open && selected_item">
@@ -351,7 +352,8 @@ export default Vue.extend({
 								return false
 							}
 						})
-						if (this.select_data.itemText) {
+						console.log('changeVal', this.selected_item)
+						if (this.select_data.itemText && this.selected_item) {
 							this.search = this.selected_item[this.select_data.itemText]
 						} else {
 							this.search = this.selected_item
@@ -360,7 +362,7 @@ export default Vue.extend({
 						this.selected_item = this.select_data.items.find(x => {
 							return x === val
 						})
-						if (this.select_data.itemText) {
+						if (this.select_data.itemText && this.selected_item) {
 							this.search = this.selected_item[this.select_data.itemText]
 						} else {
 							this.search = this.selected_item
@@ -377,6 +379,9 @@ export default Vue.extend({
 		},
 		clickOutside () {
 			this.open = false
+		},
+		focusMainDiv () {
+			this.openSelect(true)
 		}
     },
 })
