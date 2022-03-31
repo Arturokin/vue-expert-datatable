@@ -468,6 +468,7 @@ export default Vue.extend({
 				cursor: pointer;
 				padding: 8px 12px;
 				transition: .3s cubic-bezier(.25,.8,.5,1);
+				text-align: left;
 
 				&:hover {
 					background-color: #f2f2f2;
