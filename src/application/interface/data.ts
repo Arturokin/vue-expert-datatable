@@ -26,5 +26,6 @@ export default interface Data {
     item_record_before: any,
     item_record_default: any,
     current_language: Language | undefined,
-	is_canceling: boolean
+	is_canceling: boolean,
+	show_editing_icon: boolean
 }

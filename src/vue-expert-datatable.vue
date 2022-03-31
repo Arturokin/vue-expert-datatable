@@ -109,7 +109,7 @@
 												/>
 											</template>
 										</slot>
-										<div class="icon-editing" v-if="is_selected_item(index, field) && field.editable">
+										<div class="icon-editing" v-if="show_editing_icon_validate(row, index, field)">
 											<font-awesome-icon icon="pen-alt"></font-awesome-icon>...
 										</div>
 									</div>
@@ -295,7 +295,8 @@ export default /*#__PURE__*/Vue.extend({
             item_record_before: {},
             item_record_default: {},
             current_language: undefined,
-			is_canceling: false
+			is_canceling: false,
+			show_editing_icon: true
         }
     },
     props: {
@@ -475,6 +476,10 @@ export default /*#__PURE__*/Vue.extend({
 			type: Boolean,
 			default: true
 		},
+		showEditingIcon: {
+			type: Boolean,
+			default: undefined
+		},
 		customEvents: {
 			type: Object as PropType<CustomEvents>,
 			default: () : CustomEvents => {
@@ -605,6 +610,12 @@ export default /*#__PURE__*/Vue.extend({
 			} else {
 				this.current_language = initLanguage(this.$expert_datatable_config.lang || 'EN', this.tableName)
 			}
+			if (this.$expert_datatable_config.params && this.$expert_datatable_config.params.showEditingIcon !== undefined) {
+				this.show_editing_icon = this.$expert_datatable_config.params.showEditingIcon
+			} 
+			if (this.showEditingIcon !== undefined) {
+				this.show_editing_icon = this.showEditingIcon
+			}
             for (let index = 0; index < this.fields.length; index++) {
                 const item_field = this.fields[index];
 				Vue.set(this.item_record, item_field.value, '')
@@ -642,7 +653,6 @@ export default /*#__PURE__*/Vue.extend({
 				if (this.is_canceling) {
 					return resolve(undefined)
 				}
-				console.log('saveTableData', JSON.parse(JSON.stringify(this.item_record)))
 				const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
 				let form: any = this.$refs[formName]
 				if (form) {
@@ -699,7 +709,6 @@ export default /*#__PURE__*/Vue.extend({
 									if (this.customEvents.before_save && this.selected_field) {
 										await this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field)
 									}
-									console.log('item_record_copy', item_record_copy)
 									this.table_data.push(item_record_copy)
 									this.item_record = Object.assign({}, this.item_record_default)
 									this.$nextTick(async () => {
@@ -1036,6 +1045,16 @@ export default /*#__PURE__*/Vue.extend({
 				}
 			}
 		},
+		show_editing_icon_validate (_row: any, index: number, field: FieldsInterface) : boolean {
+			if (this.is_selected_item(index, field) && field.editable) {
+				if (field.fieldData && field.fieldData.showEditingIcon !== undefined) {
+					return field.fieldData.showEditingIcon
+				} else {
+					return this.show_editing_icon
+				}
+			}
+			return false
+		}
     },
 });
 </script>

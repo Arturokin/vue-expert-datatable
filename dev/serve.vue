@@ -90,7 +90,10 @@ export default Vue.extend({
                     fieldType: 'text',
                     pronoun: 'una',
 					editable: true,
-					rules: 'required'
+					rules: 'required',
+					fieldData: {
+						showEditingIcon: false
+					}
                 },
                 {
                     title: 'Monto',

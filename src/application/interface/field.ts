@@ -5,6 +5,7 @@ export interface FieldData {
 	useDollarSign?: boolean,
 	decimals?: number,
 	min?: number
+	showEditingIcon?: boolean;
 }
 
 export interface SelectData {
