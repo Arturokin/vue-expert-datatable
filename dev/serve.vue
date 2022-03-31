@@ -27,7 +27,6 @@
                 :key="2"
 				@updated-data="updatedData"
 				:custom-events="custom_events"
-				:show-edit-button="false"
 				:show-delete-button="false"
             >
                 <template v-slot:[`header.actions`]="{ header }">

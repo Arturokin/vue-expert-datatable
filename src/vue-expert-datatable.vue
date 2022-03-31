@@ -141,14 +141,16 @@
 											v-bind:header="field"
 											v-bind:adding="false"
 											v-bind:index="index"
+											v-bind:edit_events="event_listeners_edit_button(row)"
+											v-bind:delete_events="event_listeners_delete_button(row)"
 										>
 											<a-tooltip :title="current_language.edit_button_text" v-if="showEditButton">
-												<button type="button" class="expert-datatable-action-button" @click="modalEditItem(item_record)">
+												<button type="button" class="expert-datatable-action-button" v-on="event_listeners_edit_button(row)">
 													<font-awesome-icon icon="edit"></font-awesome-icon>
 												</button>
 											</a-tooltip>
 											<a-tooltip :title="current_language.delete_button_text" v-if="showDeleteButton">
-												<button type="button" class="expert-datatable-action-button" @click="modalDeleteItem(row[field.value])">
+												<button type="button" class="expert-datatable-action-button" v-on="event_listeners_delete_button(row)">
 													<font-awesome-icon icon="trash"></font-awesome-icon>
 												</button>
 											</a-tooltip>
@@ -227,14 +229,22 @@
 								</slot>
 							</div>
 							<span v-else>
-								<a-tooltip>
-									<span slot="title">
-										{{ current_language.add_button_text }}
-									</span>
-									<button type="button" class="expert-datatable-action-button" @click="saveTableData(true)">
-										<font-awesome-icon icon="save"></font-awesome-icon>
-									</button>
-								</a-tooltip>
+								<slot
+									name="add_buttons"
+									v-bind:item="item_record"
+									v-bind:header="field"
+									v-bind:index="undefined"
+									v-bind:events="event_listeners_add_button"
+								>
+									<a-tooltip>
+										<span slot="title">
+											{{ current_language.add_button_text }}
+										</span>
+										<button type="button" class="expert-datatable-action-button" v-on="event_listeners_add_button()">
+											<font-awesome-icon icon="save"></font-awesome-icon>
+										</button>
+									</a-tooltip>
+								</slot>
 							</span>
 						</td>
                     </ValidationProvider>
@@ -983,6 +993,30 @@ export default /*#__PURE__*/Vue.extend({
 				},
 				deselectRow: function () {
 					context.deSelectRow()
+				}
+			}
+		},
+		event_listeners_add_button () : any {
+			const context = this
+			return {
+				click: function (_e: any) {
+					context.saveTableData(true)
+				}
+			}
+		},
+		event_listeners_edit_button (row: any) : any {
+			const context = this
+			return {
+				click: function (_e: any) {
+					context.modalEditItem(row)
+				}
+			}
+		},
+		event_listeners_delete_button (row: any) : any {
+			const context = this
+			return {
+				click: function (_e: any) {
+					context.modalDeleteItem(row)
 				}
 			}
 		},
