@@ -115,16 +115,44 @@
 									</div>
 									
 									<div v-else>
-										<a-tooltip :title="current_language.edit_button_text">
-											<button type="button" class="expert-datatable-action-button" @click="modalEditItem(item_record)">
-												<font-awesome-icon icon="edit"></font-awesome-icon>
-											</button>
-										</a-tooltip>
-										<a-tooltip :title="current_language.delete_button_text">
-											<button type="button" class="expert-datatable-action-button" @click="modalDeleteItem(row[field.value])">
-												<font-awesome-icon icon="trash"></font-awesome-icon>
-											</button>
-										</a-tooltip>
+										<slot
+											v-if="$scopedSlots['edit_buttons.' + row[keyName]]"
+											:name="'edit_buttons.' + row[keyName]"
+											v-bind:item="row"
+											v-bind:header="field"
+											v-bind:adding="false"
+											v-bind:index="index"
+										>
+											<a-tooltip :title="current_language.edit_button_text" v-if="showEditButton">
+												<button type="button" class="expert-datatable-action-button" @click="modalEditItem(item_record)">
+													<font-awesome-icon icon="edit"></font-awesome-icon>
+												</button>
+											</a-tooltip>
+											<a-tooltip :title="current_language.delete_button_text" v-if="showDeleteButton">
+												<button type="button" class="expert-datatable-action-button" @click="modalDeleteItem(row[field.value])">
+													<font-awesome-icon icon="trash"></font-awesome-icon>
+												</button>
+											</a-tooltip>
+										</slot>
+										<slot
+											v-else
+											name="edit_buttons"
+											v-bind:item="row"
+											v-bind:header="field"
+											v-bind:adding="false"
+											v-bind:index="index"
+										>
+											<a-tooltip :title="current_language.edit_button_text" v-if="showEditButton">
+												<button type="button" class="expert-datatable-action-button" @click="modalEditItem(item_record)">
+													<font-awesome-icon icon="edit"></font-awesome-icon>
+												</button>
+											</a-tooltip>
+											<a-tooltip :title="current_language.delete_button_text" v-if="showDeleteButton">
+												<button type="button" class="expert-datatable-action-button" @click="modalDeleteItem(row[field.value])">
+													<font-awesome-icon icon="trash"></font-awesome-icon>
+												</button>
+											</a-tooltip>
+										</slot>
 									</div>
 								</td>
 							</ValidationProvider>
@@ -422,6 +450,18 @@ export default /*#__PURE__*/Vue.extend({
             default: true
         },
 		allowAdding: {
+			type: Boolean,
+			default: true
+		},
+		addButtonIcon: {
+			type: String,
+			default: ''
+		},
+		showEditButton: {
+			type: Boolean,
+			default: true
+		},
+		showDeleteButton: {
 			type: Boolean,
 			default: true
 		},
