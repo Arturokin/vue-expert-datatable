@@ -193,6 +193,30 @@
 						</ValidationObserver>
 					</tr>
                 </template>
+				<tr
+					class="expert-row footer-row"
+					v-if="$slots['footer_row'] || hasScopedSlotStartsWith('footer_row.')"
+					v-bind="bindData && bindData.footer_row ? bindData.footer_row : {}"
+				>
+					<slot
+						name="footer_row"
+					>
+						<td
+							v-for="field in final_fields.filter(x => x.visible === true)"
+							:key="'footer_row_column_' + field.value"
+							slim
+							v-bind="field.bind_data && field.bind_data.custom_header_footer ? field.bind_data.custom_header_footer(field) : {}"
+							:class="expert_column_class(field)"
+						>
+							<slot
+								:name="`footer_row.${field.value}`"
+								v-bind:field="field"
+							>
+								&nbsp;
+							</slot>
+						</td>
+					</slot>
+				</tr>
                 <ValidationObserver
 					tag="tr"
 					ref="form_add_item"
@@ -292,30 +316,6 @@
 						</td>
                     </ValidationProvider>
                 </ValidationObserver>
-				<tr
-					class="expert-row footer-row"
-					v-if="$slots['footer_row'] || hasScopedSlotStartsWith('footer_row.')"
-					v-bind="bindData && bindData.footer_row ? bindData.footer_row : {}"
-				>
-					<slot
-						name="footer_row"
-					>
-						<td
-							v-for="field in final_fields.filter(x => x.visible === true)"
-							:key="'footer_row_column_' + field.value"
-							slim
-							v-bind="field.bind_data && field.bind_data.custom_header_footer ? field.bind_data.custom_header_footer(field) : {}"
-							:class="expert_column_class(field)"
-						>
-							<slot
-								:name="`footer_row.${field.value}`"
-								v-bind:field="field"
-							>
-								&nbsp;
-							</slot>
-						</td>
-					</slot>
-				</tr>
             </tbody>
         </table>
     </div>
