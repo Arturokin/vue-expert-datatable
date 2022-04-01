@@ -634,7 +634,6 @@ export default /*#__PURE__*/Vue.extend({
         this.initData()
     },
     mounted() {
-		console.log('slots', this.$scopedSlots)
         this.initComponent()
         this.getTableData()
     },
