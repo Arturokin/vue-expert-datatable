@@ -46,6 +46,9 @@
                     <input type="text" :value="value" name="descripcion" v-on="events">
                     <!-- <input type="text" name="descripcion" :value="value" placeholder="Descripción..."> -->
                 </template>
+				<template v-slot:[`footer_row.monto`]>
+					hola
+				</template>
             </vue-expert-datatable>
         </div>
     </div>

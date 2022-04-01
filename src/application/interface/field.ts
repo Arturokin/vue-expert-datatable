@@ -9,11 +9,20 @@ export interface FieldData {
 }
 
 export interface SelectData {
-	items?: Array<any>,
-	itemText?: string,
-	itemValue?: string
-	allowClear?: boolean,
-	allowSearch?: boolean
+	items?: Array<any>;
+	itemText?: string;
+	itemValue?: string;
+	allowClear?: boolean;
+	allowSearch?: boolean;
+}
+
+export interface BindData {
+	custom_row: (row: any, index: number) => any;
+	custom_header: (field: Field) => any;
+	custom_field: (row: any, field: Field, index: number) => any;
+	custom_add_field: (field: Field) => any;
+	custom_header_row: (field: Field) => any;
+	custom_header_footer: (field: Field) => any;
 }
 export default interface Field {
     align?: 'left' | 'center' | 'right',
@@ -30,5 +39,6 @@ export default interface Field {
     editable?: boolean,
     pronoun?: string,
 	rules?: string;
-	selectData?: SelectData
+	selectData?: SelectData,
+	bind_data?: BindData
 }

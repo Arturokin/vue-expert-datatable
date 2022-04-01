@@ -8,8 +8,12 @@
 			v-click-outside="event_blur"
         >
             <thead>
-                <tr>
-                    <th v-for="field in final_fields.filter(x => x.visible === true)" :key="'field_' + field.value">
+                <tr class="expert-datatable-header" v-bind="bindData && bindData.header ? bindData.header : {}">
+                    <th
+						v-for="field in final_fields.filter(x => x.visible === true)"
+						:key="'field_' + field.value"
+						v-bind="field.bind_data && field.bind_data.custom_header ? field.bind_data.custom_header(field) : {}"
+					>
                         <slot :name="'header.' + field.value" v-bind:header="field">
                             <span>{{ field.title }}</span>
                         </slot>
@@ -17,6 +21,29 @@
                 </tr>
             </thead>
             <tbody>
+				<tr
+					class="expert-row header-row"
+					v-if="$slots['header_row'] || hasScopedSlotStartsWith('header_row.')"
+					v-bind="bindData && bindData.header_row ? bindData.header_row : {}"
+				>
+					<slot
+						name="header_row"
+					>
+						<td
+							v-for="field in final_fields.filter(x => x.visible === true)"
+							:key="'header_row_column_' + field.value"
+							v-bind="field.bind_data && field.bind_data.custom_header_row ? field.bind_data.custom_header_row(field) : {}"
+							:class="expert_column_class(field)"
+						>
+							<slot
+								:name="`header_row.${field.value}`"
+								v-bind:field="field"
+							>
+								&nbsp;
+							</slot>
+						</td>
+					</slot>
+				</tr>
                 <template v-for="(row, index) in table_data">
 					<tr
 						class="expert-row"
@@ -24,6 +51,7 @@
 						:class="{
 							'selected': (selected_index === index)
 						}"
+						v-bind="bindData && bindData.row ? bindData.row(row, index) : {}"
 					>
 						<ValidationObserver
 							v-for="field in final_fields.filter(x => x.visible === true)"
@@ -37,7 +65,11 @@
 								:rules="field.rules"
 								slim
 							>
-								<td class="expert-column" :class="expert_column_class(field, classes, index)">
+								<td
+									class="expert-column"
+									:class="expert_column_class(field, classes, index)"
+									v-bind="field.bind_data && field.bind_data.custom_field ? field.bind_data.custom_field(row, field, index) : {}"
+								>
 									<div
 										v-if="field.value !== 'actions'"
 										class="expert-item"
@@ -161,7 +193,14 @@
 						</ValidationObserver>
 					</tr>
                 </template>
-                <ValidationObserver tag="tr" ref="form_add_item" class="expert-row add-item-row" v-if="allowAdding" key="tr_add_1">
+                <ValidationObserver
+					tag="tr"
+					ref="form_add_item"
+					class="expert-row add-item-row"
+					v-if="allowAdding"
+					key="tr_add_1"
+					v-bind="bindData && bindData.add_row ? bindData.add_row : {}"
+				>
                     <ValidationProvider
                         v-for="field in final_fields.filter(x => x.visible === true)"
                         :key="'record_add_' + field.value"
@@ -170,7 +209,11 @@
 						:rules="field.rules"
 						slim
                     >
-						<td class="expert-column" :class="expert_column_class(field, classes, undefined)">
+						<td
+							class="expert-column"
+							:class="expert_column_class(field, classes, undefined, true)"
+							v-bind="field.bind_data && field.bind_data.custom_add_field ? field.bind_data.custom_add_field(field) : {}"
+						>
 							<div
 								v-if="field.value !== 'actions'"
 								class="expert-item"
@@ -249,6 +292,30 @@
 						</td>
                     </ValidationProvider>
                 </ValidationObserver>
+				<tr
+					class="expert-row footer-row"
+					v-if="$slots['footer_row'] || hasScopedSlotStartsWith('footer_row.')"
+					v-bind="bindData && bindData.footer_row ? bindData.footer_row : {}"
+				>
+					<slot
+						name="footer_row"
+					>
+						<td
+							v-for="field in final_fields.filter(x => x.visible === true)"
+							:key="'footer_row_column_' + field.value"
+							slim
+							v-bind="field.bind_data && field.bind_data.custom_header_footer ? field.bind_data.custom_header_footer(field) : {}"
+							:class="expert_column_class(field)"
+						>
+							<slot
+								:name="`footer_row.${field.value}`"
+								v-bind:field="field"
+							>
+								&nbsp;
+							</slot>
+						</td>
+					</slot>
+				</tr>
             </tbody>
         </table>
     </div>
@@ -262,6 +329,7 @@ import FieldsInterface from './application/interface/field'
 import MethodInterface from './application/interface/method'
 import AlertInterface from './application/interface/alert'
 import CustomEvents from './application/interface/custom_events'
+import BindDataProp from './application/interface/bind_data_prop'
 import ItemField from './application/components/item-field/item-field.vue'
 import initLanguage from './application/language/init-language'
 import ItemText from './application/components/item-text/item_text.vue'
@@ -485,6 +553,12 @@ export default /*#__PURE__*/Vue.extend({
 			default: () : CustomEvents => {
 				return {}
 			}
+		},
+		bindData: {
+			type: Object as PropType<BindDataProp>,
+			default: () : any => {
+				return {}
+			}
 		}
     },
     computed: {
@@ -560,6 +634,7 @@ export default /*#__PURE__*/Vue.extend({
         this.initData()
     },
     mounted() {
+		console.log('slots', this.$scopedSlots)
         this.initComponent()
         this.getTableData()
     },
@@ -959,12 +1034,27 @@ export default /*#__PURE__*/Vue.extend({
 			}
 			this.$emit('alert', alert)
 		},
-		expert_column_class(field: FieldsInterface, bindClasses: any, index: number) {
-			bindClasses[`align-${field.align}`] = true
-			if (this.is_selected_item(index, field)) {
-				bindClasses['column-selected'] = true
+		expert_column_class(field: FieldsInterface, bindClasses: any, index: number, is_adding = false) {
+			const classes: any = {}
+			classes[`align-${field.align}`] = true
+			if (is_adding) {
+				if (this.is_selected_item(index, field)) {
+					classes['column-selected'] = true
+				}
+			} else {
+				if (this.is_selected_item(index, field) && index !== undefined) {
+					classes['column-selected'] = true
+				}
 			}
-			return bindClasses
+			if (bindClasses) {
+				for (const key in bindClasses) {
+					if (Object.prototype.hasOwnProperty.call(bindClasses, key)) {
+						const current_class = bindClasses[key];
+						classes[key] = current_class
+					}
+				}
+			}
+			return classes
 		},
 		resetForm () {
 			const formName = this.adding_row_selected ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
@@ -1054,6 +1144,14 @@ export default /*#__PURE__*/Vue.extend({
 				}
 			}
 			return false
+		},
+		hasScopedSlot (name: string) {
+			const keys = Object.keys(this.$scopedSlots)
+			return keys.includes(name)
+		},
+		hasScopedSlotStartsWith (name: string) {
+			const keys = Object.keys(this.$scopedSlots)
+			return keys.find(x => x.startsWith(name)) !== undefined
 		}
     },
 });
