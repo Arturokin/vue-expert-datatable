@@ -156,12 +156,12 @@
 											v-bind:index="index"
 										>
 											<a-tooltip :title="current_language.edit_button_text" v-if="showEditButton">
-												<button type="button" class="expert-datatable-action-button" @click="modalEditItem(item_record)">
+												<button type="button" class="expert-datatable-action-button" @click="modalEditItem(item_record, index)">
 													<font-awesome-icon icon="edit"></font-awesome-icon>
 												</button>
 											</a-tooltip>
 											<a-tooltip :title="current_language.delete_button_text" v-if="showDeleteButton">
-												<button type="button" class="expert-datatable-action-button" @click="modalDeleteItem(row[field.value])">
+												<button type="button" class="expert-datatable-action-button" @click="modalDeleteItem(row[field.value], index)">
 													<font-awesome-icon icon="trash"></font-awesome-icon>
 												</button>
 											</a-tooltip>
@@ -173,16 +173,16 @@
 											v-bind:header="field"
 											v-bind:adding="false"
 											v-bind:index="index"
-											v-bind:edit_events="event_listeners_edit_button(row)"
-											v-bind:delete_events="event_listeners_delete_button(row)"
+											v-bind:edit_events="event_listeners_edit_button(row, index)"
+											v-bind:delete_events="event_listeners_delete_button(row, index)"
 										>
 											<a-tooltip :title="current_language.edit_button_text" v-if="showEditButton">
-												<button type="button" class="expert-datatable-action-button" v-on="event_listeners_edit_button(row)">
+												<button type="button" class="expert-datatable-action-button" v-on="event_listeners_edit_button(row, index)">
 													<font-awesome-icon icon="edit"></font-awesome-icon>
 												</button>
 											</a-tooltip>
 											<a-tooltip :title="current_language.delete_button_text" v-if="showDeleteButton">
-												<button type="button" class="expert-datatable-action-button" v-on="event_listeners_delete_button(row)">
+												<button type="button" class="expert-datatable-action-button" v-on="event_listeners_delete_button(row, index)">
 													<font-awesome-icon icon="trash"></font-awesome-icon>
 												</button>
 											</a-tooltip>
@@ -872,11 +872,11 @@ export default /*#__PURE__*/Vue.extend({
 				}
 			})
         },
-        modalEditItem(item_record: any) {
-			this.$emit('edit-item', item_record)
+        modalEditItem(item_record: any, index: number) {
+			this.$emit('edit-item', item_record, index)
         },
-        modalDeleteItem(item_record: any) {
-			this.$emit('delete-item', item_record)
+        modalDeleteItem(item_record: any, index: number) {
+			this.$emit('delete-item', item_record, index)
         },
         getHttpByMethod(method: MethodInterface, data: any | undefined = undefined) {
             if(this.http_client) {
@@ -1102,19 +1102,19 @@ export default /*#__PURE__*/Vue.extend({
 				}
 			}
 		},
-		event_listeners_edit_button (row: any) : any {
+		event_listeners_edit_button (row: any, index: number) : any {
 			const context = this
 			return {
 				click: function (_e: any) {
-					context.modalEditItem(row)
+					context.modalEditItem(row, index)
 				}
 			}
 		},
-		event_listeners_delete_button (row: any) : any {
+		event_listeners_delete_button (row: any, index: number) : any {
 			const context = this
 			return {
 				click: function (_e: any) {
-					context.modalDeleteItem(row)
+					context.modalDeleteItem(row, index)
 				}
 			}
 		},
