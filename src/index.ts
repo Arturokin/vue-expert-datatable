@@ -6,8 +6,6 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEdit, faTrash, faTrashAlt, faPlus, faSave, faPen, faPenAlt } from '@fortawesome/free-solid-svg-icons'
 import { faTrashCan, faTrashAlt as faTrashRegular, faPlusSquare } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { Tooltip } from 'ant-design-vue'
-import 'ant-design-vue/lib/tooltip/style/css'
 import { ValidationProvider, ValidationObserver } from 'vee-validate'
 import Validator from './application/utils/validator'
 
@@ -33,14 +31,12 @@ export function VueExpertDatatablePlugin(Vue: typeof _vue, options: Configuratio
         }
     }
     Vue.prototype.$expert_datatable_config = options;
-    console.log('options', Vue.prototype.$expert_datatable_config, options)
     Validator(options.lang)
     Vue.component('vue-expert-datatable', VueExpertDatatable)
     Vue.directive('click-outside', ClickOutside)
     Vue.component('FontAwesomeIcon', FontAwesomeIcon)
     Vue.component('ValidationProvider', ValidationProvider)
     Vue.component('ValidationObserver', ValidationObserver)
-    Vue.use(Tooltip)
 }
 
 export default VueExpertDatatablePlugin

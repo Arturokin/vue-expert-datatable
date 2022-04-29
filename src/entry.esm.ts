@@ -5,10 +5,10 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEdit, faTrash, faTrashAlt, faPlus, faSave, faPen, faPenAlt } from '@fortawesome/free-solid-svg-icons'
 import { faTrashCan, faTrashAlt as faTrashRegular, faPlusSquare } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { Tooltip } from 'ant-design-vue'
-import 'ant-design-vue/lib/tooltip/style/css'
 import { ValidationProvider, ValidationObserver } from 'vee-validate'
 import Validator from './application/utils/validator'
+import VTooltip from 'v-tooltip'
+import 'v-tooltip/dist/v-tooltip.css'
 
 // Import vue component
 import component from '@/vue-expert-datatable.vue';
@@ -52,7 +52,7 @@ export default /*#__PURE__*/((): InstallableComponent => {
         Vue.component('FontAwesomeIcon', FontAwesomeIcon)
         Vue.component('ValidationProvider', ValidationProvider)
         Vue.component('ValidationObserver', ValidationObserver)
-        Vue.use(Tooltip)
+        Vue.use(VTooltip)
     };
     return installable;
 })();
