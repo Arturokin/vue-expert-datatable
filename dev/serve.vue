@@ -114,6 +114,21 @@ export default Vue.extend({
 					}
                 },
                 {
+                    title: 'Monto 2',
+                    align: 'right',
+                    value: 'monto_2',
+                    fieldType: 'autonumeric',
+                    pronoun: 'el',
+					editable: true,
+					rules: 'required|numeric',
+					placeholder: 'testing',
+					fieldData: {
+						useDollarSign: true,
+						thousandSeparator: '.',
+						decimalSeparator: ','
+					}
+                },
+                {
                     title: 'Tipo',
                     align: 'left',
                     value: 'tipo_id',

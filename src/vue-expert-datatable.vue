@@ -640,6 +640,7 @@ export default /*#__PURE__*/Vue.extend({
     watch: {
         item: function (newVal) {
             this.current_item = Object.assign({}, newVal)
+			this.$forceUpdate()
         },
         current_item: function (newVal) {
             this.$emit('update:item', newVal)
@@ -788,6 +789,7 @@ export default /*#__PURE__*/Vue.extend({
 												.catch((error) => {
 													this.item_record = Object.assign({}, this.item_record_default)
 													this.$emit('error', error)
+													this.$forceUpdate()
 													return resolve(undefined)
 												})
 										}
@@ -815,6 +817,7 @@ export default /*#__PURE__*/Vue.extend({
 										this.$emit('updated-data', this.table_data)
 										this.$emit('added-item', item_record_copy)
 										this.deSelectRow()
+										this.$forceUpdate()
 										return resolve(this.item_record)
 									})
 								}
@@ -846,10 +849,12 @@ export default /*#__PURE__*/Vue.extend({
 												this.$emit('updated-item', result.data[this.itemName])
 												this.selected_row_before = Object.assign({}, this.item_record_default)
 												this.deSelectRow()
+												this.$forceUpdate()
 												return resolve(result.data[this.itemName])
 											})
 												.catch((error) => {
 													this.selected_row = Object.assign({}, this.selected_row_before)
+													this.$forceUpdate()
 													this.$emit('error', error)
 													return resolve(undefined)
 												})
@@ -869,6 +874,7 @@ export default /*#__PURE__*/Vue.extend({
 									this.$emit('updated-item', selected_row_copy)
 
 									this.selected_row_before = Object.assign({}, this.item_record_default)
+									this.$forceUpdate()
 
 									if (this.customEvents.after_edit && this.selected_field) {
 										await this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)
@@ -993,9 +999,11 @@ export default /*#__PURE__*/Vue.extend({
 			this.is_canceling = true
 			if (this.adding_row_selected) {
 				this.item_record = Object.assign({}, this.item_record_default)
+				this.$forceUpdate()
 			} else {
 				this.selected_row = Object.assign({}, this.selected_row_before)
 				this.deSelectRow()
+				this.$forceUpdate()
 			}
 		},
 		event_input (e: any) {
