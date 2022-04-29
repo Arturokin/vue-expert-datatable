@@ -6,6 +6,7 @@
 			cellspacing="0"
 			rowspacing="0"
 			v-click-outside="event_blur"
+			v-if="initialized"
         >
             <thead>
                 <tr class="expert-datatable-header" v-bind="bindData && bindData.header ? bindData.header : {}">
@@ -364,7 +365,8 @@ export default /*#__PURE__*/Vue.extend({
             item_record_default: {},
             current_language: undefined,
 			is_canceling: false,
-			show_editing_icon: true
+			show_editing_icon: true,
+			initialized: false
         }
     },
     props: {
@@ -630,12 +632,13 @@ export default /*#__PURE__*/Vue.extend({
 			this.table_data = newval
 		}
     },
-    beforeMount() {
-        this.initData()
-    },
     mounted() {
+		this.initData()
         this.initComponent()
         this.getTableData()
+		this.$nextTick(() => {
+			this.initialized = true
+		})
     },
     methods: {
         initComponent() {
@@ -767,7 +770,7 @@ export default /*#__PURE__*/Vue.extend({
 												return resolve(item_record_copy)
 											})
 												.catch((error) => {
-													this.item_record = Object.assign({}, this.item_record_before)
+													this.item_record = Object.assign({}, this.item_record_default)
 													this.$emit('error', error)
 													return resolve(undefined)
 												})
@@ -785,6 +788,7 @@ export default /*#__PURE__*/Vue.extend({
 									}
 									this.table_data.push(item_record_copy)
 									this.item_record = Object.assign({}, this.item_record_default)
+									this.item_record_before = Object.assign({}, this.item_record_default)
 									this.$nextTick(async () => {
 										if (this.customEvents.after_add && this.selected_field) {
 											await this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)
@@ -824,6 +828,7 @@ export default /*#__PURE__*/Vue.extend({
 													await this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field)
 												}
 												this.$emit('updated-item', result.data[this.itemName])
+												this.selected_row_before = Object.assign({}, this.item_record_default)
 												this.deSelectRow()
 												return resolve(result.data[this.itemName])
 											})
@@ -846,6 +851,8 @@ export default /*#__PURE__*/Vue.extend({
 									}
 									this.$emit('updated-data', this.table_data)
 									this.$emit('updated-item', selected_row_copy)
+
+									this.selected_row_before = Object.assign({}, this.item_record_default)
 
 									if (this.customEvents.after_edit && this.selected_field) {
 										await this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)
@@ -969,9 +976,9 @@ export default /*#__PURE__*/Vue.extend({
 		cancel_editing () {
 			this.is_canceling = true
 			if (this.adding_row_selected) {
-				Object.assign(this.item_record, this.item_record_default)
+				this.item_record = Object.assign({}, this.item_record_default)
 			} else {
-				Object.assign(this.selected_row, this.selected_row_before)
+				this.selected_row = Object.assign({}, this.selected_row_before)
 				this.deSelectRow()
 			}
 		},

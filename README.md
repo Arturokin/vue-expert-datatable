@@ -12,6 +12,10 @@ Vue expert datatable is a single-file-component for Vue2 like jquery-datatables.
 - Non API REST based CRUD (Working with arrays)
 - Styled and customizable Datatables
 
+## PACKAGE CURRENTLY ON DEVELOPMENT 🚀
+
+We are working on finishing this package
+
 ## Getting started 🚀
 
 1. NPM
@@ -24,7 +28,7 @@ npm install vue-expert-datatable
 yarn add vue-expert-datatable
 ```
 
-### Instalación 🔧
+### Setting up 🔧
 
 1. Global and in-component use
 ```
@@ -46,12 +50,11 @@ Vue.use(VueExpertDatatable)
 
 MIT License
 
-## Expresiones de Gratitud 🎁
+## Contributing 🎁
 
-* Comenta a otros sobre este proyecto 📢
-* Invita una cerveza 🍺 o un café ☕ a alguien del equipo. 
-* Da las gracias públicamente 🤓.
-* etc.
+* Tell other about this great package 📢
+* Buy me a coffe
+* Give thanks 🤓.
 
 
 
