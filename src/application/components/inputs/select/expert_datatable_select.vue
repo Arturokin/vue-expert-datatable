@@ -24,6 +24,7 @@
 					:name="field.value"
 					type="text"
 					:placeholder="placeholder"
+					:key="key"
 					class="expert-datatable-select-search-input"
 					v-bind="$attrs"
 					ref="input_search"
@@ -107,6 +108,10 @@ export default Vue.extend({
 		focusOnInit: {
 			type: Boolean,
 			default: false
+		},
+		key: {
+			type: String,
+			default: 'key'
 		}
 	},
 	data() : Data {

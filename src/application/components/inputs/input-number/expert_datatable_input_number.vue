@@ -5,6 +5,7 @@
 			:placeholder="placeholder"
 			:value="value"
 			:name="field.value"
+			:key="key"
 			ref="input"
 			@input="input"
 			@blur="event_blur"
@@ -42,6 +43,10 @@ export default /*#__PURE__*/Vue.extend({
 		decimals: {
 			type: Number,
 			default: 0
+		},
+		key: {
+			type: String,
+			default: 'key'
 		}
     },
     watch: {

@@ -5,13 +5,12 @@
 			:placeholder="placeholder"
 			:value="value"
 			:name="field.value"
+			:key="key"
 			@input="input"
 			@blur="event_blur"
 			@focus="event_focus"
 			@keydown="event_key_down"
-		>
-
-		</input>
+		/>
 	</div>
 </template>
 
@@ -47,7 +46,11 @@ export default /*#__PURE__*/Vue.extend({
 				const valids = ['button', 'submit']
 				return valids.includes(htmlType)
 			}
-        }
+        },
+		key: {
+			type: String,
+			default: 'key'
+		}
     },
     methods: {
         input (e: InputEvent) {

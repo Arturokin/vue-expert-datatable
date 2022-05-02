@@ -1,6 +1,6 @@
 <template>
-    <div class="expert-item-field">
-		<form action="" @submit.prevent="blur" autocomplete="off">
+    <div class="expert-item-field" :key="`div_item_field_${index}_${field.value}`">
+		<form action="" @submit.prevent="blur" autocomplete="off" :key="`form_item_field_${index}_${field.value}`">
 			<expert-datatable-input
 				v-if="field.fieldType === 'text'"
 				:ref="'input_' + field.value"
@@ -8,6 +8,7 @@
 				:placeholder="inputPlaceholder(field)"
 				:field="field"
 				:inputName="field.value"
+				:key="`item_field_input_${index}_${field.value}`"
 				@blur="event_blur"
 				@focus="event_focus"
 				@keydown="event_key_down"
@@ -19,6 +20,7 @@
 				:placeholder="inputPlaceholder(field)"
 				:field="field"
 				:inputName="field.value"
+				:key="`item_field_input_${index}_${field.value}`"
 				@blur="event_blur"
 				@focus="event_focus"
 				@keydown="event_key_down"
@@ -30,6 +32,7 @@
 				:placeholder="inputPlaceholder(field)"
 				:field="field"
 				:inputName="field.value"
+				:key="`item_field_input_${index}_${field.value}`"
 				@blur="event_blur"
 				@focus="event_focus"
 				@keydown="event_key_down"
@@ -41,6 +44,7 @@
 				:placeholder="inputPlaceholder(field)"
 				:field="field"
 				:inputName="field.value"
+				:key="`item_field_input_${index}_${field.value}`"
 				@blur="event_blur"
 				@focus="event_focus"
 				@keydown="event_key_down"
@@ -53,6 +57,7 @@
 				:field="field"
 				:inputName="field.value"
 				:focus-on-init="!isAdding"
+				:key="`item_field_input_${index}_${field.value}`"
 				@blur="event_blur"
 				@focus="event_focus"
 				@keydown="event_key_down"
@@ -63,6 +68,7 @@
 				:ref="'input_' + field.value"
 				:field="field"
 				:inputName="field.value"
+				:key="`item_field_input_${index}_${field.value}`"
 				@blur="event_blur"
 				@focus="event_focus"
 				@keydown="event_key_down"
@@ -112,7 +118,11 @@ export default /*#__PURE__*/Vue.extend({
         isAdding: {
             type: Boolean,
             default: false
-        }
+        },
+		index: {
+			type: Number,
+			default: 1
+		}
     },
     watch: {
         localValue (newValue) {

@@ -1,6 +1,6 @@
 {
   "name": "vue-expert-datatable",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Vue component which automates the working with tables, allowing to use in-line editing and API REST based adding, editing and deleting records",
   "main": "dist/vue-expert-datatable.ssr.js",
   "browser": "dist/vue-expert-datatable.esm.js",
@@ -19,6 +19,10 @@
     "build:ssr": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format cjs",
     "build:es": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format es",
     "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Arturokin/vue-expert-datatable"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.1.0",

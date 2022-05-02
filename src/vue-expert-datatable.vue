@@ -105,6 +105,7 @@
 													<item-text
 														:field="field"
 														:item="row"
+														:key="`item_text_${index}_${field.value}`"
 														v-on="event_listener_item(row, index, field)"
 													/>
 												</template>
@@ -132,12 +133,14 @@
 													:field="field"
 													:table-name="tableName"
 													:value="row[field.value]"
+													:key="`item_field_${index}_${field.value}`"
 													v-on="event_listeners_input(row, index, field)"
 												></item-field>
 											</template>
 											<template v-else>
 												<item-text
 													:field="field"
+													:key="`item_text_${index}_${field.value}`"
 													:item="row"
 												/>
 											</template>
@@ -282,6 +285,7 @@
 										:field="field"
 										:table-name="tableName"
 										:value="item_record[field.value]"
+										:key="`item_field_add_${field.value}`"
 										is-adding
 										v-on="event_listeners_input(undefined, undefined, field)"
 									></item-field>
@@ -307,6 +311,7 @@
 										:field="field"
 										:table-name="tableName"
 										:value="item_record[field.value]"
+										:key="`item_field_add_${field.value}`"
 										is-adding
 										v-on="event_listeners_input(undefined, undefined, field)"
 									></item-field>

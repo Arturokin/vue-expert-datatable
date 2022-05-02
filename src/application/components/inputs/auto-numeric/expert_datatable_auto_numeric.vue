@@ -12,6 +12,7 @@
 			:name="field.value"
 			autocomplete="off"
 			:value="value"
+			:key="key"
 			@change="change"
 			@focus.native="focus"
 			@blur.native="blur"
@@ -53,6 +54,10 @@ export default /*#__PURE__*/Vue.extend({
 		disabled: {
 			type: Boolean,
 			default: false
+		},
+		key: {
+			type: String,
+			default: 'key'
 		}
     },
 	computed: {

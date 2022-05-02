@@ -99,82 +99,30 @@ export default Vue.extend({
 					}
                 },
                 {
-                    title: 'Monto',
-                    align: 'right',
-                    value: 'monto',
+                    title: 'Monto debe',
+                    value: 'monto_debe',
                     fieldType: 'autonumeric',
                     pronoun: 'el',
-					editable: true,
-					rules: 'required|numeric',
-					placeholder: 'testing',
-					fieldData: {
-						useDollarSign: true,
-						thousandSeparator: '.',
-						decimalSeparator: ','
-					}
+                    rules: 'numeric',
+                    editable: true,
+                    fieldData: {
+                        useDollarSign: true,
+                        thousandSeparator: '.'
+                    },
+                    align: 'right'
                 },
                 {
-                    title: 'Monto 2',
-                    align: 'right',
-                    value: 'monto_2',
+                    title: 'Monto haber',
+                    value: 'monto_haber',
                     fieldType: 'autonumeric',
                     pronoun: 'el',
-					editable: true,
-					rules: 'required|numeric',
-					placeholder: 'testing',
-					fieldData: {
-						useDollarSign: true,
-						thousandSeparator: '.',
-						decimalSeparator: ','
-					}
-                },
-                {
-                    title: 'Tipo',
-                    align: 'left',
-                    value: 'tipo_id',
-                    fieldType: 'select',
-                    pronoun: 'el',
-					editable: true,
-					rules: 'required',
-					selectData: {
-						items: [
-							{
-								text: 'Tipo 1',
-								value: '1'
-							},
-							{
-								text: 'Tipo 2',
-								value: '2'
-							},
-							{
-								text: 'Tipo 3',
-								value: '3'
-							},
-							{
-								text: 'Tipo 4',
-								value: '4'
-							},
-							{
-								text: 'Tipo 5',
-								value: '5'
-							}
-						],
-						itemText: 'text',
-						itemValue: 'value'
-					}
-                },
-                {
-                    title: 'Estado',
-                    align: 'left',
-                    value: 'estado',
-					editable: true
-                },
-                {
-                    title: 'Visible',
-                    align: 'left',
-                    value: 'visible',
-                    fieldType: 'checkbox',
-                    editable: true
+                    rules: 'numeric',
+                    editable: true,
+                    fieldData: {
+                        useDollarSign: true,
+                        thousandSeparator: '.'
+                    },
+                    align: 'right'
                 }
             ],
             api_url: 'https://crudcrud.com/api/d5e1605ccb3e4c509de1c4601906f3c4/users',
