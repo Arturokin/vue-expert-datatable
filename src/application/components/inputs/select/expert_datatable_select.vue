@@ -357,7 +357,6 @@ export default Vue.extend({
 								return false
 							}
 						})
-						console.log('changeVal', this.selected_item)
 						if (this.select_data.itemText && this.selected_item) {
 							this.search = this.selected_item[this.select_data.itemText]
 						} else {
