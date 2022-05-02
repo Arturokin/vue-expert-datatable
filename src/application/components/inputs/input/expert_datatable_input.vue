@@ -5,7 +5,7 @@
 			:placeholder="placeholder"
 			:value="value"
 			:name="field.value"
-			:key="key"
+			:key="inputKey"
 			@input="input"
 			@blur="event_blur"
 			@focus="event_focus"
@@ -47,7 +47,7 @@ export default /*#__PURE__*/Vue.extend({
 				return valids.includes(htmlType)
 			}
         },
-		key: {
+		inputKey: {
 			type: String,
 			default: 'key'
 		}

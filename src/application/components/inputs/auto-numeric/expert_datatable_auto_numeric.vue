@@ -12,8 +12,7 @@
 			:name="field.value"
 			autocomplete="off"
 			:value="value"
-			:key="key"
-			@change="change"
+			:key="inputKey"
 			@focus.native="focus"
 			@blur.native="blur"
 			@keydown.native="keyDown"
@@ -55,7 +54,7 @@ export default /*#__PURE__*/Vue.extend({
 			type: Boolean,
 			default: false
 		},
-		key: {
+		inputKey: {
 			type: String,
 			default: 'key'
 		}
@@ -88,7 +87,8 @@ export default /*#__PURE__*/Vue.extend({
                 readOnly: this.readOnly,
                 decimalPlaces: this.decimals,
                 eventBubbles: true,
-                minimumValue: this.min
+                minimumValue: this.min,
+				emptyInputBehavior: 'null'
             }
         },
 		thousandSeparator () : '.' | ',' {
@@ -120,8 +120,8 @@ export default /*#__PURE__*/Vue.extend({
                 {
                     // This ensures that the component works with v-model
                     input: function (value: any) {
-                        vm.$emit('input', value != null ? parseFloat(value) : null)
-                        vm.$emit('change', value != null ? parseFloat(value) : null)
+                        vm.$emit('input', !isNaN(parseFloat(value)) ? parseFloat(value) : 0)
+                        vm.$emit('change', !isNaN(parseFloat(value)) ? parseFloat(value) : 0)
                     }
                 }
             )
@@ -138,18 +138,11 @@ export default /*#__PURE__*/Vue.extend({
         }
 	},
     methods: {
-        change () {
-			if (typeof this.value === 'string') {
-            	this.$emit('input', this.value != null ? parseFloat(this.value) : null)
-			} else {
-            	this.$emit('input', this.value)
-			}
-        },
         blur () {
-			if (typeof this.value === 'string') {
-            	this.$emit('blur', this.value != null ? parseFloat(this.value) : null)
-			} else {
+			if (typeof this.value === 'number') {
             	this.$emit('blur', this.value)
+			} else {
+            	this.$emit('blur', !isNaN(parseFloat(this.value)) ? parseFloat(this.value) : 0)
 			}
         },
 		focus () {

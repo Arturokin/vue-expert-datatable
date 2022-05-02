@@ -127,26 +127,7 @@ export default Vue.extend({
             ],
             api_url: 'https://crudcrud.com/api/d5e1605ccb3e4c509de1c4601906f3c4/users',
 			test_type: 'API',
-			test_data: [
-				{
-					id: 1,
-					nombre: 'Prueba 1',
-					descripcion: 'Descripción de prueba...',
-					estado: 'Activo',
-					visible: true,
-					monto: '',
-					tipo_id: ''
-				},
-				{
-					id: 2,
-					nombre: 'Prueba 2',
-					descripcion: 'Descripción de prueba 2...',
-					estado: 'Inactivo',
-					visible: true,
-					monto: '',
-					tipo_id: ''
-				}
-			]
+			test_data: []
         }
     },
 	computed: {

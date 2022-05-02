@@ -134,6 +134,7 @@
 													:table-name="tableName"
 													:value="row[field.value]"
 													:key="`item_field_${index}_${field.value}`"
+													:index="index"
 													v-on="event_listeners_input(row, index, field)"
 												></item-field>
 											</template>
@@ -286,6 +287,7 @@
 										:table-name="tableName"
 										:value="item_record[field.value]"
 										:key="`item_field_add_${field.value}`"
+										index="add"
 										is-adding
 										v-on="event_listeners_input(undefined, undefined, field)"
 									></item-field>
@@ -312,6 +314,7 @@
 										:table-name="tableName"
 										:value="item_record[field.value]"
 										:key="`item_field_add_${field.value}`"
+										index="add"
 										is-adding
 										v-on="event_listeners_input(undefined, undefined, field)"
 									></item-field>
@@ -355,6 +358,7 @@ import BindDataProp from './application/interface/bind_data_prop'
 import ItemField from './application/components/item-field/item-field.vue'
 import initLanguage from './application/language/init-language'
 import ItemText from './application/components/item-text/item_text.vue'
+import Field from './application/interface/field';
 
 export default /*#__PURE__*/Vue.extend({
     name: 'VueExpertDatatable',
@@ -644,7 +648,7 @@ export default /*#__PURE__*/Vue.extend({
     },
     watch: {
         item: function (newVal) {
-            this.current_item = Object.assign({}, newVal)
+			this.copyObject(this.current_item, newVal, true)
 			this.$forceUpdate()
         },
         current_item: function (newVal) {
@@ -792,7 +796,7 @@ export default /*#__PURE__*/Vue.extend({
 												return resolve(item_record_copy)
 											})
 												.catch((error) => {
-													this.item_record = Object.assign({}, this.item_record_default)
+													this.copyObject(this.item_record, this.item_record_default, true)
 													this.$emit('error', error)
 													this.$forceUpdate()
 													return resolve(undefined)
@@ -810,8 +814,8 @@ export default /*#__PURE__*/Vue.extend({
 										await this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field)
 									}
 									this.table_data.push(item_record_copy)
-									this.item_record = Object.assign({}, this.item_record_default)
-									this.item_record_before = Object.assign({}, this.item_record_default)
+									this.copyObject(this.item_record, this.item_record_default, true)
+									this.copyObject(this.item_record_before, this.item_record_default, true)
 									this.$nextTick(async () => {
 										if (this.customEvents.after_add && this.selected_field) {
 											await this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)
@@ -852,13 +856,13 @@ export default /*#__PURE__*/Vue.extend({
 													await this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field)
 												}
 												this.$emit('updated-item', result.data[this.itemName])
-												this.selected_row_before = Object.assign({}, this.item_record_default)
+												this.copyObject(this.selected_row_before, this.item_record_default, true)
 												this.deSelectRow()
 												this.$forceUpdate()
 												return resolve(result.data[this.itemName])
 											})
 												.catch((error) => {
-													this.selected_row = Object.assign({}, this.selected_row_before)
+													this.copyObject(this.selected_row, this.selected_row_before, true)
 													this.$forceUpdate()
 													this.$emit('error', error)
 													return resolve(undefined)
@@ -878,8 +882,7 @@ export default /*#__PURE__*/Vue.extend({
 									this.$emit('updated-data', this.table_data)
 									this.$emit('updated-item', selected_row_copy)
 
-									this.selected_row_before = Object.assign({}, this.item_record_default)
-									this.$forceUpdate()
+									this.copyObject(this.selected_row_before, this.item_record_default, true)
 
 									if (this.customEvents.after_edit && this.selected_field) {
 										await this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)
@@ -1003,10 +1006,10 @@ export default /*#__PURE__*/Vue.extend({
 		cancel_editing () {
 			this.is_canceling = true
 			if (this.adding_row_selected) {
-				this.item_record = Object.assign({}, this.item_record_default)
+				this.copyObject(this.item_record, this.item_record_default, true)
 				this.$forceUpdate()
 			} else {
-				this.selected_row = Object.assign({}, this.selected_row_before)
+				this.copyObject(this.selected_row, this.selected_row_before, true)
 				this.deSelectRow()
 				this.$forceUpdate()
 			}
@@ -1016,7 +1019,7 @@ export default /*#__PURE__*/Vue.extend({
                 const name = this.selected_field.value
                 const is_adding = this.selected_index === undefined
                 if (name) {
-					let inputValue = null
+					let inputValue = ""
 					if (typeof e === 'object' && e && e.target) {
 						inputValue = e.target.value
 					} else {
@@ -1187,6 +1190,35 @@ export default /*#__PURE__*/Vue.extend({
 		hasScopedSlotStartsWith (name: string) {
 			const keys = Object.keys(this.$scopedSlots)
 			return keys.find(x => x.startsWith(name)) !== undefined
+		},
+		copyObject (target: any, source: any, format_from_fields = false) {
+            for (const prop in source) {
+                if (typeof target[prop] !== 'undefined') {
+					let value: any = ""
+					if (!isNaN(parseFloat(source[prop]))) {
+						value = parseFloat(source[prop])
+					} else if (!isNaN(parseInt(source[prop]))) {
+						value = parseInt(source[prop])
+					} else if (Array.isArray(source[prop])) {
+						value = JSON.parse(JSON.stringify(source[prop]))
+					} else {
+						value = source[prop]
+					}
+					const field = this.fields.find(x => x.value === prop)
+					if (format_from_fields && field) {
+						value = this.formatValue(value, field)
+					}
+					Vue.set(target, prop, value)
+                }
+            }
+		},
+		formatValue(val: any, field: Field) {
+			if (field.fieldType && field.fieldType === 'autonumeric') {
+				if (!val) {
+					return 0
+				}
+			}
+			return val
 		}
     },
 });
