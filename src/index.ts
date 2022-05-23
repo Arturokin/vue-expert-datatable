@@ -8,6 +8,8 @@ import { faTrashCan, faTrashAlt as faTrashRegular, faPlusSquare } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { ValidationProvider, ValidationObserver } from 'vee-validate'
 import Validator from './application/utils/validator'
+import VTooltip from 'v-tooltip'
+import 'v-tooltip/dist/v-tooltip.css'
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -37,6 +39,7 @@ export function VueExpertDatatablePlugin(Vue: typeof _vue, options: Configuratio
     Vue.component('FontAwesomeIcon', FontAwesomeIcon)
     Vue.component('ValidationProvider', ValidationProvider)
     Vue.component('ValidationObserver', ValidationObserver)
+    Vue.use(VTooltip)
 }
 
 export default VueExpertDatatablePlugin
