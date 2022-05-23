@@ -127,7 +127,17 @@ export default Vue.extend({
             ],
             api_url: 'https://crudcrud.com/api/d5e1605ccb3e4c509de1c4601906f3c4/users',
 			test_type: 'API',
-			test_data: []
+			test_data: [
+				{
+					id: 1,
+					nombre: 'sin editar',
+					descripcion: 'sin eliminar',
+					monto_debe: 0,
+					monto_haber: 500000,
+					ved_can_edit: false,
+					ved_can_delete: false
+				}
+			]
         }
     },
 	computed: {
@@ -141,7 +151,7 @@ export default Vue.extend({
 		updatedData (data: any) {
 			this.test_data = data
 		},
-		beforeSave (row: any, _index: number | undefined, _field: Field) : Promise<any> {
+		beforeSave (row: any, _index: number | undefined, _field?: Field) : Promise<any> {
 			return new Promise((resolve) => {
 				row.id = this.getRandomArbitrary(1, 200)
 				return resolve(row)
