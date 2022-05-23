@@ -160,6 +160,13 @@
 											v-bind:adding="false"
 											v-bind:index="index"
 										>
+											<slot
+												name="before_actions_buttons"
+												v-bind:item="row"
+												v-bind:header="field"
+												v-bind:adding="false"
+												v-bind:index="index"
+											/>
 											<button
 												v-if="showEditButton"
 												v-tooltip="current_language.edit_button_text"
@@ -178,10 +185,17 @@
 											>
 												<font-awesome-icon icon="trash"></font-awesome-icon>
 											</button>
+											<slot
+												name="after_actions_buttons"
+												v-bind:item="row"
+												v-bind:header="field"
+												v-bind:adding="false"
+												v-bind:index="index"
+											/>
 										</slot>
 										<slot
 											v-else
-											name="edit_buttons"
+											name="actions"
 											v-bind:item="row"
 											v-bind:header="field"
 											v-bind:adding="false"
@@ -189,8 +203,15 @@
 											v-bind:edit_events="event_listeners_edit_button(row, index)"
 											v-bind:delete_events="event_listeners_delete_button(row, index)"
 										>
+											<slot
+												name="before_actions_buttons"
+												v-bind:item="row"
+												v-bind:header="field"
+												v-bind:adding="false"
+												v-bind:index="index"
+											/>
 											<button
-												v-if="showEditButton"
+												v-if="showEditButton && is_editable(field, row)"
 												v-tooltip="current_language.edit_button_text"
 												type="button"
 												class="expert-datatable-action-button"
@@ -207,6 +228,13 @@
 											>
 												<font-awesome-icon icon="trash"></font-awesome-icon>
 											</button>
+											<slot
+												name="after_actions_buttons"
+												v-bind:item="row"
+												v-bind:header="field"
+												v-bind:adding="false"
+												v-bind:index="index"
+											/>
 										</slot>
 									</div>
 								</td>
