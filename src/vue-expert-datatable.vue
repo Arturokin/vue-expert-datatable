@@ -625,18 +625,18 @@ export default /*#__PURE__*/Vue.extend({
                 field.align = field.align ? field.align : 'center'
                 field.colSpan = field.colSpan ? field.colSpan : 1
                 field.filterIcon = field.filterIcon ? field.filterIcon : 'fas fa-arrow'
-                field.sortable = field.sortable ? field.sortable : true
-                field.width = field.width ? field.width : 'auto'
-                field.visible = field.visible ? field.visible : true
-                field.editable = field.editable ? field.editable : true
+                field.sortable = field.sortable !== undefined && field.sortable !== null ? field.sortable : true
+                field.width = field.width !== undefined && field.width !== null ? field.width : 'auto'
+                field.visible = field.visible !== undefined && field.visible !== null ? field.visible : true
+                field.editable = field.editable !== undefined && field.editable !== null ? field.editable : true
                 field.fieldType = field.fieldType ? field.fieldType : undefined
                 field.fieldData = field.fieldData ? field.fieldData : undefined
-                field.fieldAlwaysVisible = field.fieldAlwaysVisible ? field.fieldAlwaysVisible : false
+                field.fieldAlwaysVisible = field.fieldAlwaysVisible !== undefined && field.fieldAlwaysVisible !== null ? field.fieldAlwaysVisible : false
                 fields.push(field)
             }
 
             const exists_actions_field = this.fields.find(x => x.value === 'actions')
-            if (exists_actions_field === undefined) {
+            if (exists_actions_field === undefined && !this.hideActionsField) {
                 const actions_field: FieldsInterface = {
                     align: 'center',
                     colSpan: 1,
