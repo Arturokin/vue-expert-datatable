@@ -63,7 +63,7 @@
 							<ValidationProvider
 								v-slot="{ errors, validate, classes }"
 								:name="field.title.toLowerCase()"
-								:rules="field.rules"
+								:rules="prepareRules(field, row, index)"
 								slim
 							>
 								<td
@@ -279,7 +279,7 @@
                         :key="'record_add_' + field.value"
 						v-slot="{ errors, validate, classes }"
 						:name="field.title.toLowerCase()"
-						:rules="field.rules"
+						:rules="prepareRules(field, item_record, 'add')"
 						slim
                     >
 						<td
@@ -1280,6 +1280,42 @@ export default /*#__PURE__*/Vue.extend({
 				}
 			}
 			return val
+		},
+		cleanForm () {
+			this.copyObject(this.item_record, this.item_record_default, true)
+			this.copyObject(this.item_record_before, this.item_record_default, true)
+			this.deSelectRow()
+			this.resetForm()
+		},
+		is_editable(field: Field, item: any) {
+			if (item) {
+				if (item.ved_can_edit !== undefined) {
+					return item.ved_can_edit
+				}
+			}
+			if (field.value === 'actions') {
+				return true
+			}
+			return field.editable || false;
+		},
+		can_delete(field: Field, item: any) {
+			if (item) {
+				if (item.ved_can_delete !== undefined) {
+					return item.ved_can_delete
+				}
+			}
+			if (field.value === 'actions') {
+				return true
+			}
+			return field.editable || false;
+		},
+		prepareRules (field: Field, item: any, index: any) {
+			if (typeof field.rules === 'string') {
+				return field.rules
+			} else if (typeof field.rules === 'function') {
+				return field.rules(field, item, index)
+			}
+			return ''
 		}
     },
 });

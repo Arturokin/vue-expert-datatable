@@ -38,7 +38,7 @@ export default interface Field {
 	fieldAlwaysVisible?: boolean,
     editable?: boolean,
     pronoun?: string,
-	rules?: string;
+	rules?: string | ((field: Field, item: any, index: any) => string)
 	selectData?: SelectData,
 	bind_data?: BindData
 }
