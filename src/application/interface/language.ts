@@ -11,6 +11,8 @@ export default interface Language {
     rule_length: string;
     rule_min: string;
     rule_max: string;
+    rule_min_value: string;
+    rule_max_value: string;
 	rule_url: string;
 	rule_between: string;
 	// messages

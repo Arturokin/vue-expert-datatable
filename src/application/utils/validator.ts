@@ -49,6 +49,14 @@ export default function (lang: 'ES' | 'EN') : void {
             ...max,
             message: loadedLang.rule_max
         })
+        extend('min_value', {
+            ...min,
+            message: loadedLang.rule_min_value
+        })
+        extend('max_value', {
+            ...max,
+            message: loadedLang.rule_max_value
+        })
         extend('between', {
             ...between,
             message: loadedLang.rule_between

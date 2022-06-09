@@ -1,6 +1,6 @@
 {
   "name": "vue-expert-datatable",
-  "version": "0.2.75",
+  "version": "0.2.83",
   "description": "Vue component which automates the working with tables, allowing to use in-line editing and API REST based adding, editing and deleting records",
   "main": "dist/vue-expert-datatable.ssr.js",
   "browser": "dist/vue-expert-datatable.esm.js",
@@ -33,6 +33,7 @@
     "autonumeric": "^4.6.0",
     "axios": "^0.21.1",
     "core-js": "^3.14.0",
+    "just-clone": "^5.1.0",
     "v-tooltip": "^3.0.0-beta.20",
     "vee-validate": "^3.4.14",
     "vue-autonumeric": "^1.2.6"

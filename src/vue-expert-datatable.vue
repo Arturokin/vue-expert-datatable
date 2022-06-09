@@ -402,6 +402,7 @@ import initLanguage from './application/language/init-language'
 import ItemText from './application/components/item-text/item_text.vue'
 import Field from './application/interface/field';
 import Exception from './application/utils/exception'
+import clone from 'just-clone'
 
 export default /*#__PURE__*/Vue.extend({
     name: 'VueExpertDatatable',
@@ -817,6 +818,7 @@ export default /*#__PURE__*/Vue.extend({
 						return resolve(undefined)
 					}
 					const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
+					console.log('formName', formName)
 					let form: any = this.$refs[formName]
 					if (form) {
 						if (Array.isArray(this.$refs[formName])) {
@@ -828,16 +830,22 @@ export default /*#__PURE__*/Vue.extend({
 								if (this.isWithApi) {
 									if(this.add_method) {
 										this.loading_data = true
-										const item_record_copy = JSON.parse(JSON.stringify(this.item_record))
+										const item_record_copy = clone(this.item_record)
 										if (this.customEvents.before_add && this.selected_field) {
-											await this.customEvents.before_add(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+											const cont = await Promise.resolve(this.customEvents.before_add(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 												throw new Exception(error.message, error.code)
 											})
+											if (!cont) {
+												return false
+											}
 										}
 										if (this.customEvents.before_save && this.selected_field) {
-											await this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+											const cont = await Promise.resolve(this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 												throw new Exception(error.message, error.code)
 											})
+											if (!cont) {
+												return false
+											}
 										}
 										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.add_method, item_record_copy)
 										if(http_method) {
@@ -858,51 +866,73 @@ export default /*#__PURE__*/Vue.extend({
 												this.$emit('inserted-item', item)
 											}
 											if (this.customEvents.after_add && this.selected_field) {
-												await this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+												const cont = await Promise.resolve(this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 													throw new Exception(error.message, error.code)
 												})
+												if (!cont) {
+													return false
+												}
 											}
 											if (this.customEvents.after_save && this.selected_field) {
-												await this.customEvents.after_save(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+												const cont = await Promise.resolve(this.customEvents.after_save(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 													throw new Exception(error.message, error.code)
 												})
+												if (!cont) {
+													return false
+												}
 											}
+											this.copyObject(this.item_record, this.item_record_default, true)
+											this.copyObject(this.item_record_before, this.item_record_default, true)
 											this.deSelectRow()
+											form.reset()
 											return resolve(item_record_copy)
 										}
 									} else {
 										throw new Exception('you haven\'t provided an add method')
 									}
 								} else {
-									const item_record_copy = JSON.parse(JSON.stringify(this.item_record))
+									const item_record_copy = clone(this.item_record)
 									if (this.customEvents.before_add) {
-										await this.customEvents.before_add(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+										const cont = await Promise.resolve(this.customEvents.before_add(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 											throw new Exception(error.message, error.code)
 										})
+										if (!cont) {
+											return false
+										}
 									}
 									if (this.customEvents.before_save) {
-										await this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+										const cont = await Promise.resolve(this.customEvents.before_save(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 											throw new Exception(error.message, error.code)
 										})
+										if (!cont) {
+											return false
+										}
 									}
 									this.table_data.push(item_record_copy)
 									this.copyObject(this.item_record, this.item_record_default, true)
 									this.copyObject(this.item_record_before, this.item_record_default, true)
 									this.$nextTick(async () => {
 										if (this.customEvents.after_add) {
-											await this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+											const cont = await Promise.resolve(this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 												throw new Exception(error.message, error.code)
 											})
+											if (!cont) {
+												return false
+											}
 										}
 										if (this.customEvents.after_save) {
-											await this.customEvents.after_save(item_record_copy, this.selected_index, this.selected_field).catch((error) => {
+											const cont = await Promise.resolve(this.customEvents.after_save(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 												throw new Exception(error.message, error.code)
 											})
+											if (!cont) {
+												return false
+											}
 										}
 										this.$emit('updated-data', this.table_data)
 										this.$emit('added-item', item_record_copy)
-										this.deSelectRow()
+										await this.deSelectRow()
 										this.$forceUpdate()
+										form.reset()
 										return resolve(this.item_record)
 									})
 								}
@@ -910,16 +940,22 @@ export default /*#__PURE__*/Vue.extend({
 								if (this.isWithApi) {
 									if(this.update_method) {
 										this.loading_data = true
-										const selected_row_copy = JSON.parse(JSON.stringify(this.selected_row))
+										const selected_row_copy = clone(this.selected_row)
 										if (this.customEvents.before_edit) {
-											await this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+											const cont = await Promise.resolve(this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 												throw new Exception(error.message, error.code)
 											})
+											if (!cont) {
+												return false
+											}
 										}
 										if (this.customEvents.before_save) {
-											await this.customEvents.before_save(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+											const cont = await Promise.resolve(this.customEvents.before_save(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 												throw new Exception(error.message, error.code)
 											})
+											if (!cont) {
+												return false
+											}
 										}
 										const http_method : Promise<AxiosResponse<any>> | undefined = this.getHttpByMethod(this.update_method, selected_row_copy)
 										if(http_method) {
@@ -936,58 +972,92 @@ export default /*#__PURE__*/Vue.extend({
 												this.$emit('updated-data', this.table_data)
 											}
 											if (this.customEvents.after_edit) {
-												await this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+												const cont = await Promise.resolve(this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 													throw new Exception(error.message, error.code)
 												})
+												if (!cont) {
+													return false
+												}
 											}
 											if (this.customEvents.after_save) {
-												await this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+												const cont = await Promise.resolve(this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 													throw new Exception(error.message, error.code)
 												})
+												if (!cont) {
+													return false
+												}
 											}
 											this.$emit('updated-item', response.data[this.itemName])
 											this.copyObject(this.selected_row_before, this.item_record_default, true)
-											this.deSelectRow()
+											await this.deSelectRow()
 											this.$forceUpdate()
+											form.reset()
 											return resolve(response.data[this.itemName])
 										}
 									} else {
 										throw new Exception('you haven\'t provided an update method')
 									}
 								} else {
-									const selected_row_copy = JSON.parse(JSON.stringify(this.selected_row))
+									console.log('EDIT', clone(this.selected_row))
+									const selected_row_copy = clone(this.selected_row)
 									if (this.customEvents.before_edit) {
-										await this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+										const cont = await Promise.resolve(this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 											throw new Exception(error.message, error.code)
 										})
+										if (!cont) {
+											return false
+										}
 									}
 									if (this.customEvents.before_save) {
-										await this.customEvents.before_save(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+										const cont = await Promise.resolve(this.customEvents.before_save(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 											throw new Exception(error.message, error.code)
 										})
+										if (!cont) {
+											return false
+										}
 									}
 									this.$emit('updated-data', this.table_data)
 									this.$emit('updated-item', selected_row_copy)
 
-									this.copyObject(this.selected_row_before, this.item_record_default, true)
+									this.copyObject(this.selected_row_before, this.selected_row, true)
 
 									if (this.customEvents.after_edit) {
-										await this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+										const cont = await Promise.resolve(this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 											throw new Exception(error.message, error.code)
 										})
+										if (!cont) {
+											return false
+										}
 									}
 									if (this.customEvents.after_save) {
-										await this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field).catch((error) => {
+										const cont = await Promise.resolve(this.customEvents.after_save(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
 											throw new Exception(error.message, error.code)
 										})
+										if (!cont) {
+											return false
+										}
 									}
-									this.deSelectRow()
+									await this.deSelectRow()
+									form.reset()
 									return resolve(selected_row_copy)
 								}
 							}
 						} else {
-							this.deSelectRow()
-							throw new Exception(this.current_language?.fill_required_fields || '', 10)
+							let error_message = this.current_language?.fill_required_fields || ''
+							for (const key in form.errors) {
+								if (Object.prototype.hasOwnProperty.call(form.errors, key)) {
+									const error = form.errors[key];
+									error_message = error
+								}
+							}
+							if (!is_adding) {
+								this.copyObject(this.selected_row, this.selected_row_before, true)
+							} else {
+								this.copyObject(this.item_record, this.item_record_before, true)
+							}
+							form.reset()
+							await this.deSelectRow()
+							throw new Exception(error_message, 10)
 						}
 					}
 				} catch (error) {
@@ -996,6 +1066,9 @@ export default /*#__PURE__*/Vue.extend({
 						message: error.message,
 						code: error.code
 					})
+					if (error.code === undefined) {
+						console.error('Uknown Vue Expert Table Error:', error.message, error.stack)
+					}
 					return resolve(undefined)
 				}
 			})
@@ -1051,19 +1124,21 @@ export default /*#__PURE__*/Vue.extend({
         },
 		copyItem (item: any) {
 			if (this.adding_row_selected) {
-				this.item_record_before = JSON.parse(JSON.stringify(this.item_record))
+				this.item_record_before = clone(this.item_record)
 			} else {
 				if (item) {
-					this.selected_row_before = JSON.parse(JSON.stringify(item))
+					this.selected_row_before = clone(item)
 				}
 			}
 		},
         deSelectRow () {
-			this.resetForm()
-			this.$nextTick(() => {
-				this.selected_field = undefined
-				this.selected_row = undefined
-				this.selected_index = undefined
+			return new Promise((resolve) => {
+				this.$nextTick(() => {
+					this.selected_field = undefined
+					this.selected_row = undefined
+					this.selected_index = undefined
+					resolve(true)
+				})
 			})
         },
 		focusSelectedInput (field: FieldsInterface, index: number | undefined = undefined) {
@@ -1094,14 +1169,14 @@ export default /*#__PURE__*/Vue.extend({
                 return false
             }
         },
-		cancel_editing () {
+		async cancel_editing () {
 			this.is_canceling = true
 			if (this.adding_row_selected) {
 				this.copyObject(this.item_record, this.item_record_default, true)
 				this.$forceUpdate()
 			} else {
 				this.copyObject(this.selected_row, this.selected_row_before, true)
-				this.deSelectRow()
+				await this.deSelectRow()
 				this.$forceUpdate()
 			}
 		},
@@ -1137,7 +1212,7 @@ export default /*#__PURE__*/Vue.extend({
 						this.cancel_editing()
 					}
 				}
-				this.deSelectRow()
+				await this.deSelectRow()
 			}
 			this.is_canceling = false
 		},
@@ -1294,7 +1369,7 @@ export default /*#__PURE__*/Vue.extend({
 					} else if (!isNaN(parseInt(source[prop]))) {
 						value = parseInt(source[prop])
 					} else if (Array.isArray(source[prop])) {
-						value = JSON.parse(JSON.stringify(source[prop]))
+						value = clone(source[prop])
 					} else {
 						value = source[prop]
 					}
@@ -1314,10 +1389,10 @@ export default /*#__PURE__*/Vue.extend({
 			}
 			return val
 		},
-		cleanForm () {
+		async cleanForm () {
 			this.copyObject(this.item_record, this.item_record_default, true)
 			this.copyObject(this.item_record_before, this.item_record_default, true)
-			this.deSelectRow()
+			await this.deSelectRow()
 			this.resetForm()
 		},
 		is_editable(field: Field, item: any) {
