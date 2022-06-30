@@ -1,11 +1,12 @@
 export interface FieldData {
-	placeholder?: string,
-	thousandSeparator?: '.' | ',', // for autonumeric,
-	decimalSeparator?: ',' | '.', // for autonumeric,
-	useDollarSign?: boolean,
-	decimals?: number,
-	min?: number
+	placeholder?: string;
+	thousandSeparator?: '.' | ','; // for autonumeric,
+	decimalSeparator?: ',' | '.'; // for autonumeric,
+	useDollarSign?: boolean;
+	decimals?: number;
+	min?: number;
 	showEditingIcon?: boolean;
+	currencySymbolPlacement?: 'p' | 's';
 }
 
 export interface SelectData {

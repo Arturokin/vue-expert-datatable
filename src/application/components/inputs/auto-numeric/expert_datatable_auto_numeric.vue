@@ -78,12 +78,18 @@ export default /*#__PURE__*/Vue.extend({
 			}
 			return 0
 		},
+		currencySymbolPlacement () : 'p' | 's' {
+			if (this.field.fieldData) {
+				return this.field.fieldData.currencySymbolPlacement || 'p'
+			}
+			return 'p'
+		},
         options () : any {
             return {
                 digitGroupSeparator: this.thousandSeparator,
                 decimalCharacter: this.decimalSeparator,
                 currencySymbol: this.use_dollar_sign ? '$' : '',
-                currencySymbolPlacement: 'p',
+                currencySymbolPlacement: this.currencySymbolPlacement,
                 readOnly: this.readOnly,
                 decimalPlaces: this.decimals,
                 eventBubbles: true,
