@@ -702,7 +702,7 @@ export default /*#__PURE__*/Vue.extend({
     },
     watch: {
         item: function (newVal) {
-			this.copyObject(this.current_item, newVal, true)
+			this.current_item = this.copyObject(newVal)
 			this.$forceUpdate()
         },
         current_item: function (newVal) {
@@ -818,7 +818,7 @@ export default /*#__PURE__*/Vue.extend({
 						return resolve(undefined)
 					}
 					const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
-					console.log('formName', formName)
+					// console.log('formName', formName)
 					let form: any = this.$refs[formName]
 					if (form) {
 						if (Array.isArray(this.$refs[formName])) {
@@ -851,7 +851,7 @@ export default /*#__PURE__*/Vue.extend({
 										if(http_method) {
 											const response = await http_method
 												.catch((error) => {
-													this.copyObject(this.item_record, this.item_record_default, true)
+													this.item_record = this.copyObject(this.item_record_default)
 													this.$emit('error', error)
 													this.$forceUpdate()
 													throw new Exception(error.message, 1)
@@ -881,8 +881,8 @@ export default /*#__PURE__*/Vue.extend({
 													return false
 												}
 											}
-											this.copyObject(this.item_record, this.item_record_default, true)
-											this.copyObject(this.item_record_before, this.item_record_default, true)
+											this.item_record = this.copyObject(this.item_record_default)
+											this.item_record_before = this.copyObject(this.item_record_default)
 											this.deSelectRow()
 											form.reset()
 											return resolve(item_record_copy)
@@ -909,8 +909,8 @@ export default /*#__PURE__*/Vue.extend({
 										}
 									}
 									this.table_data.push(item_record_copy)
-									this.copyObject(this.item_record, this.item_record_default, true)
-									this.copyObject(this.item_record_before, this.item_record_default, true)
+									this.item_record = this.copyObject(this.item_record_default)
+									this.item_record_before = this.copyObject(this.item_record_default)
 									this.$nextTick(async () => {
 										if (this.customEvents.after_add) {
 											const cont = await Promise.resolve(this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
@@ -961,7 +961,7 @@ export default /*#__PURE__*/Vue.extend({
 										if(http_method) {
 											const response = await http_method.then()
 												.catch((error) => {
-													this.copyObject(this.selected_row, this.selected_row_before, true)
+													this.selected_row = this.copyObject(this.selected_row_before)
 													this.$forceUpdate()
 													throw new Exception(error.message, 1)
 												})
@@ -988,7 +988,7 @@ export default /*#__PURE__*/Vue.extend({
 												}
 											}
 											this.$emit('updated-item', response.data[this.itemName])
-											this.copyObject(this.selected_row_before, this.item_record_default, true)
+											this.selected_row_before = this.copyObject(this.item_record_default)
 											await this.deSelectRow()
 											this.$forceUpdate()
 											form.reset()
@@ -998,7 +998,7 @@ export default /*#__PURE__*/Vue.extend({
 										throw new Exception('you haven\'t provided an update method')
 									}
 								} else {
-									console.log('EDIT', clone(this.selected_row))
+									// console.log('EDIT', clone(this.selected_row))
 									const selected_row_copy = clone(this.selected_row)
 									if (this.customEvents.before_edit) {
 										const cont = await Promise.resolve(this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
@@ -1019,7 +1019,7 @@ export default /*#__PURE__*/Vue.extend({
 									this.$emit('updated-data', this.table_data)
 									this.$emit('updated-item', selected_row_copy)
 
-									this.copyObject(this.selected_row_before, this.selected_row, true)
+									this.selected_row_before = this.copyObject(this.selected_row)
 
 									if (this.customEvents.after_edit) {
 										const cont = await Promise.resolve(this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
@@ -1047,27 +1047,30 @@ export default /*#__PURE__*/Vue.extend({
 							for (const key in form.errors) {
 								if (Object.prototype.hasOwnProperty.call(form.errors, key)) {
 									const error = form.errors[key];
-									error_message = error
+
+									if (Array.isArray(error) && error.length > 0) {
+										error_message = error[0]
+									}
 								}
 							}
+							// console.log('is_adding', is_adding)
 							if (!is_adding) {
-								this.copyObject(this.selected_row, this.selected_row_before, true)
-							} else {
-								this.copyObject(this.item_record, this.item_record_before, true)
+								this.selected_row = this.copyObject(this.selected_row_before)
 							}
-							form.reset()
 							await this.deSelectRow()
+							form.reset()
 							throw new Exception(error_message, 10)
 						}
 					}
 				} catch (error) {
+					// console.log('ERROR', error.message, error.stack)
 					this.showAlert({
 						type: 'error',
 						message: error.message,
 						code: error.code
 					})
 					if (error.code === undefined) {
-						console.error('Uknown Vue Expert Table Error:', error.message, error.stack)
+						console.error('Unknown Vue Expert Table Error:', error.message, error.stack)
 					}
 					return resolve(undefined)
 				}
@@ -1172,16 +1175,17 @@ export default /*#__PURE__*/Vue.extend({
 		async cancel_editing () {
 			this.is_canceling = true
 			if (this.adding_row_selected) {
-				this.copyObject(this.item_record, this.item_record_default, true)
+				this.item_record = this.copyObject(this.item_record_default)
 				this.$forceUpdate()
 			} else {
-				this.copyObject(this.selected_row, this.selected_row_before, true)
+				this.selected_row = this.copyObject(this.selected_row_before)
 				await this.deSelectRow()
 				this.$forceUpdate()
 			}
 		},
 		event_input (e: any) {
             if (this.selected_field) {
+				console.log('EVENT INPUT VED', e)
                 const name = this.selected_field.value
                 const is_adding = this.selected_index === undefined
                 if (name) {
@@ -1191,6 +1195,7 @@ export default /*#__PURE__*/Vue.extend({
 					} else {
 						inputValue = e
 					}
+					console.log('inputValue', inputValue)
 					if (this.selected_row && !is_adding) {
 						Vue.set(this.selected_row, name, inputValue)
 						// this.selected_row[name] = inputValue
@@ -1218,7 +1223,7 @@ export default /*#__PURE__*/Vue.extend({
 		},
 		event_key_down (e: any) {
 			if (e.keyCode === 13 || e.which === 13) {
-                this.saveTableData(this.adding_row_selected !== undefined)
+                this.saveTableData(this.adding_row_selected)
             }
             if (e.keyCode === 27 || e.which === 27 || e.key === 'Escape') {
                 this.cancel_editing()
@@ -1360,26 +1365,8 @@ export default /*#__PURE__*/Vue.extend({
 			const keys = Object.keys(this.$scopedSlots)
 			return keys.find(x => x.startsWith(name)) !== undefined
 		},
-		copyObject (target: any, source: any, format_from_fields = false) {
-            for (const prop in source) {
-                if (typeof target[prop] !== 'undefined') {
-					let value: any = ""
-					if (!isNaN(parseFloat(source[prop]))) {
-						value = parseFloat(source[prop])
-					} else if (!isNaN(parseInt(source[prop]))) {
-						value = parseInt(source[prop])
-					} else if (Array.isArray(source[prop])) {
-						value = clone(source[prop])
-					} else {
-						value = source[prop]
-					}
-					const field = this.fields.find(x => x.value === prop)
-					if (format_from_fields && field) {
-						value = this.formatValue(value, field)
-					}
-					Vue.set(target, prop, value)
-                }
-            }
+		copyObject (source: any) : any {
+            return clone(source)
 		},
 		formatValue(val: any, field: Field) {
 			if (field.fieldType && field.fieldType === 'autonumeric') {
@@ -1390,8 +1377,8 @@ export default /*#__PURE__*/Vue.extend({
 			return val
 		},
 		async cleanForm () {
-			this.copyObject(this.item_record, this.item_record_default, true)
-			this.copyObject(this.item_record_before, this.item_record_default, true)
+			this.item_record = this.copyObject(this.item_record_default)
+			this.item_record_before = this.copyObject(this.item_record_default)
 			await this.deSelectRow()
 			this.resetForm()
 		},
