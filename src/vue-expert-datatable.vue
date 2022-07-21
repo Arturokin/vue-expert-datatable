@@ -634,6 +634,10 @@ export default /*#__PURE__*/Vue.extend({
 			default: () : any => {
 				return {}
 			}
+		},
+		logging: {
+			type: Boolean,
+			default: false
 		}
     },
     computed: {
@@ -768,6 +772,7 @@ export default /*#__PURE__*/Vue.extend({
             }
         },
         initData() : void {
+			if (this.logging) console.log('Init table', this.tableName)
 			if (this.lang) {
             	this.current_language = initLanguage(this.lang, this.tableName)
 			} else {
@@ -818,7 +823,7 @@ export default /*#__PURE__*/Vue.extend({
 						return resolve(undefined)
 					}
 					const formName = is_adding ? 'form_add_item' : `form_edit_item_${this.selected_index}_${this.selected_field?.value}`
-					// console.log('formName', formName)
+					if (this.logging) console.log('formName', formName)
 					let form: any = this.$refs[formName]
 					if (form) {
 						if (Array.isArray(this.$refs[formName])) {
@@ -998,7 +1003,7 @@ export default /*#__PURE__*/Vue.extend({
 										throw new Exception('you haven\'t provided an update method')
 									}
 								} else {
-									// console.log('EDIT', clone(this.selected_row))
+									if (this.logging) console.log('EDIT', clone(this.selected_row))
 									const selected_row_copy = clone(this.selected_row)
 									if (this.customEvents.before_edit) {
 										const cont = await Promise.resolve(this.customEvents.before_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
@@ -1053,7 +1058,7 @@ export default /*#__PURE__*/Vue.extend({
 									}
 								}
 							}
-							// console.log('is_adding', is_adding)
+							if (this.logging) console.log('is_adding', is_adding)
 							if (!is_adding) {
 								this.selected_row = this.copyObject(this.selected_row_before)
 							}
@@ -1063,7 +1068,7 @@ export default /*#__PURE__*/Vue.extend({
 						}
 					}
 				} catch (error) {
-					// console.log('ERROR', error.message, error.stack)
+					if (this.logging) console.log('ERROR', error.message, error.stack)
 					this.showAlert({
 						type: 'error',
 						message: error.message,
@@ -1185,7 +1190,7 @@ export default /*#__PURE__*/Vue.extend({
 		},
 		event_input (e: any) {
             if (this.selected_field) {
-				console.log('EVENT INPUT VED', e)
+				if (this.logging) console.log('EVENT INPUT VED', e)
                 const name = this.selected_field.value
                 const is_adding = this.selected_index === undefined
                 if (name) {
@@ -1195,7 +1200,7 @@ export default /*#__PURE__*/Vue.extend({
 					} else {
 						inputValue = e
 					}
-					console.log('inputValue', inputValue)
+					if (this.logging) console.log('inputValue', inputValue)
 					if (this.selected_row && !is_adding) {
 						Vue.set(this.selected_row, name, inputValue)
 						// this.selected_row[name] = inputValue
