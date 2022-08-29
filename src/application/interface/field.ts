@@ -7,6 +7,7 @@ export interface FieldData {
 	min?: number;
 	showEditingIcon?: boolean;
 	currencySymbolPlacement?: 'p' | 's';
+	date_format?: string;
 }
 
 export interface SelectData {
@@ -34,7 +35,7 @@ export default interface Field {
     title: string,
     width?: string | number,
     visible?: boolean,
-    fieldType?: 'text' | 'longtext' | 'number' | 'autonumeric' | 'select' | 'range' | 'checkbox' | 'switch' | 'date' | 'datetime' | 'autocomplete' | 'custom' | undefined,
+    fieldType?: 'text' | 'longtext' | 'number' | 'autonumeric' | 'select' | 'range' | 'checkbox' | 'switch' | 'date' | 'datetime' | 'time' | 'week' | 'month' | 'autocomplete' | 'custom' | undefined,
 	fieldData?: FieldData,
 	fieldAlwaysVisible?: boolean,
     editable?: boolean,
@@ -42,4 +43,5 @@ export default interface Field {
 	rules?: string | ((field: Field, item: any, index: any) => string)
 	selectData?: SelectData,
 	bind_data?: BindData
+	default_value?: any;
 }

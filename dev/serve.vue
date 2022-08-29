@@ -28,6 +28,7 @@
 				@updated-data="updatedData"
 				:custom-events="custom_events"
 				:show-delete-button="false"
+				logging
             >
                 <template v-slot:[`header.actions`]="{ header }">
                     Acciones
@@ -72,38 +73,52 @@ export default Vue.extend({
         return {
             fields: [
                 {
-                    title: 'id',
-                    align: 'left',
-                    value: 'id',
-                    pronoun: 'el'
+                    title: 'Cta. Cte.',
+                    value: 'cuentaBancariaId',
+                    fieldType: 'select',
+                    pronoun: 'la',
+                    rules: 'required',
+                    editable: true,
+                    fieldData: {
+                        showEditingIcon: false
+                    },
+                    selectData: {
+                        items: [{ nombre: 'Cuenta 1', id: '1' }, { nombre: 'Cuenta 2', id: '2' }],
+                        itemText: 'nombre',
+                        itemValue: 'id'
+                    }
                 },
                 {
-                    title: 'Nombre',
-                    align: 'left',
-                    value: 'nombre',
+                    title: 'Nº Comprobante',
+                    value: 'n_comprobante',
                     fieldType: 'text',
-                    pronoun: 'un',
-					editable: true,
-					rules: 'required'
+                    pronoun: 'el',
+                    rules: 'numeric|required',
+                    editable: true,
+                    fieldData: {
+                        showEditingIcon: false
+                    },
+                    align: 'left'
                 },
                 {
-                    title: 'Descripción',
-                    align: 'left',
-                    value: 'descripcion',
-                    fieldType: 'text',
-                    pronoun: 'una',
-					editable: true,
-					rules: 'required',
-					fieldData: {
-						showEditingIcon: false
-					}
+                    title: 'Fecha',
+                    value: 'fecha',
+                    fieldType: 'date',
+                    pronoun: 'la',
+                    rules: 'required',
+                    editable: true,
+                    fieldData: {
+                        showEditingIcon: false,
+						date_format: 'DD/MM/YYYY'
+                    },
+                    align: 'left'
                 },
                 {
-                    title: 'Monto debe',
-                    value: 'monto_debe',
+                    title: 'Monto',
+                    value: 'monto',
                     fieldType: 'autonumeric',
                     pronoun: 'el',
-                    rules: 'numeric',
+                    rules: 'numeric|required',
                     editable: true,
                     fieldData: {
                         useDollarSign: true,
@@ -112,17 +127,20 @@ export default Vue.extend({
                     align: 'right'
                 },
                 {
-                    title: 'Monto haber',
-                    value: 'monto_haber',
-                    fieldType: 'autonumeric',
+                    title: 'Cajero',
+                    value: 'cajeroId',
+                    fieldType: 'select',
                     pronoun: 'el',
-                    rules: 'numeric',
+                    rules: 'required',
                     editable: true,
                     fieldData: {
-                        useDollarSign: true,
-                        thousandSeparator: '.'
+                        showEditingIcon: false
                     },
-                    align: 'right'
+                    selectData: {
+                        items: [{"id":2,"login":"cajero","password":"$2b$10$RuJ0jsEyAglq.WKV7F9gpO5ghT5sEc.OfJkP1oXCVknSQRCRhWxrS","requiere_cambio_password":2,"estado":1,"created_at":"2022-06-08T15:48:55.312Z","personaId":2,"timbre":null,"updated_in":"2022-06-08T15:48:55.312Z","perfiles":[{"id":9,"nombre":"Cajero","estado":1,"alias":"alias_cajero","con_filtro_perfil":1,"entorno":["[\"administracion\"]"],"created_at":"2022-06-08T15:48:55.312Z","updated_in":"2022-06-08T15:48:55.312Z","es_perfil_publico":false}]}],
+                        itemText: 'login',
+                        itemValue: 'id'
+                    }
                 }
             ],
             api_url: 'https://crudcrud.com/api/d5e1605ccb3e4c509de1c4601906f3c4/users',

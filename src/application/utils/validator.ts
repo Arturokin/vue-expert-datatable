@@ -6,9 +6,9 @@ import esEs from '../language/es-ES'
 
 export default function (lang: 'ES' | 'EN') : void {
     let loadedLang: Language | undefined = undefined
-    if (loadedLang === 'EN') {
+    if (lang === 'EN') {
         loadedLang = enEN
-    } else if (lang === 'EN') {
+    } else if (lang === 'ES') {
         loadedLang = esEs
     } else {
         loadedLang = enEN

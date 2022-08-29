@@ -45,10 +45,9 @@
 						</td>
 					</slot>
 				</tr>
-                <template v-for="(row, index) in table_data">
+                <template v-for="(row, index) in table_data" :key="`record_${table_identifier}_${index}`">
 					<tr
 						class="expert-row"
-						:key="`record_${table_identifier}_${index}`"
 						:class="{
 							'selected': (selected_index === index)
 						}"
@@ -389,7 +388,7 @@
 </template>
 
 <script lang="ts">
-import Vue, { PropType } from 'vue';
+import Vue, { Component, PropType } from 'vue';
 import axios, { AxiosResponse } from 'axios'
 import DataInterface from './application/interface/data'
 import FieldsInterface from './application/interface/field'
@@ -403,8 +402,9 @@ import ItemText from './application/components/item-text/item_text.vue'
 import Field from './application/interface/field';
 import Exception from './application/utils/exception'
 import clone from 'just-clone'
+import moment from 'moment'
 
-export default /*#__PURE__*/Vue.extend({
+const VueExpertDatatable: Component<DataInterface, any, any, any, any> = /*#__PURE__*/Vue.extend({
     name: 'VueExpertDatatable',
     components: {
         'item-field': ItemField,
@@ -706,7 +706,7 @@ export default /*#__PURE__*/Vue.extend({
     },
     watch: {
         item: function (newVal) {
-			this.current_item = this.copyObject(newVal)
+			this.current_item = this.cloneObject(newVal)
 			this.$forceUpdate()
         },
         current_item: function (newVal) {
@@ -785,9 +785,10 @@ export default /*#__PURE__*/Vue.extend({
 				this.show_editing_icon = this.showEditingIcon
 			}
             for (let index = 0; index < this.fields.length; index++) {
-                const item_field = this.fields[index];
-				Vue.set(this.item_record, item_field.value, '')
-				Vue.set(this.item_record_default, item_field.value, '')
+                const item_field = this.fields[index]
+				const default_value = typeof item_field.default_value !== undefined ? item_field.default_value : ''
+				Vue.set(this.item_record, item_field.value,  default_value)
+				Vue.set(this.item_record_default, item_field.value, default_value)
             }
         },
         cleanUrl (url: string) : string {
@@ -830,6 +831,7 @@ export default /*#__PURE__*/Vue.extend({
 							form = form[0]
 						}
 						const validate = await form.validate()
+						if (this.logging) console.log('validate', validate)
 						if (validate) {
 							if (is_adding) {
 								if (this.isWithApi) {
@@ -856,7 +858,7 @@ export default /*#__PURE__*/Vue.extend({
 										if(http_method) {
 											const response = await http_method
 												.catch((error) => {
-													this.item_record = this.copyObject(this.item_record_default)
+													this.copyObject(this.item_record, this.item_record_default)
 													this.$emit('error', error)
 													this.$forceUpdate()
 													throw new Exception(error.message, 1)
@@ -886,8 +888,8 @@ export default /*#__PURE__*/Vue.extend({
 													return false
 												}
 											}
-											this.item_record = this.copyObject(this.item_record_default)
-											this.item_record_before = this.copyObject(this.item_record_default)
+											this.copyObject(this.item_record, this.item_record_default)
+											this.copyObject(this.item_record_before, this.item_record_default)
 											this.deSelectRow()
 											form.reset()
 											return resolve(item_record_copy)
@@ -914,8 +916,8 @@ export default /*#__PURE__*/Vue.extend({
 										}
 									}
 									this.table_data.push(item_record_copy)
-									this.item_record = this.copyObject(this.item_record_default)
-									this.item_record_before = this.copyObject(this.item_record_default)
+									this.copyObject(this.item_record, this.item_record_default)
+									this.copyObject(this.item_record_before, this.item_record_default)
 									this.$nextTick(async () => {
 										if (this.customEvents.after_add) {
 											const cont = await Promise.resolve(this.customEvents.after_add(item_record_copy, this.selected_index, this.selected_field)).catch((error: any) => {
@@ -966,7 +968,6 @@ export default /*#__PURE__*/Vue.extend({
 										if(http_method) {
 											const response = await http_method.then()
 												.catch((error) => {
-													this.selected_row = this.copyObject(this.selected_row_before)
 													this.$forceUpdate()
 													throw new Exception(error.message, 1)
 												})
@@ -993,7 +994,7 @@ export default /*#__PURE__*/Vue.extend({
 												}
 											}
 											this.$emit('updated-item', response.data[this.itemName])
-											this.selected_row_before = this.copyObject(this.item_record_default)
+											this.selected_row_before = this.cloneObject(this.item_record_default)
 											await this.deSelectRow()
 											this.$forceUpdate()
 											form.reset()
@@ -1024,7 +1025,7 @@ export default /*#__PURE__*/Vue.extend({
 									this.$emit('updated-data', this.table_data)
 									this.$emit('updated-item', selected_row_copy)
 
-									this.selected_row_before = this.copyObject(this.selected_row)
+									this.selected_row_before = this.cloneObject(this.selected_row)
 
 									if (this.customEvents.after_edit) {
 										const cont = await Promise.resolve(this.customEvents.after_edit(selected_row_copy, this.selected_index, this.selected_field)).catch((error: any) => {
@@ -1060,9 +1061,8 @@ export default /*#__PURE__*/Vue.extend({
 							}
 							if (this.logging) console.log('is_adding', is_adding)
 							if (!is_adding) {
-								this.selected_row = this.copyObject(this.selected_row_before)
+								this.cancel_editing()
 							}
-							await this.deSelectRow()
 							form.reset()
 							throw new Exception(error_message, 10)
 						}
@@ -1077,6 +1077,7 @@ export default /*#__PURE__*/Vue.extend({
 					if (error.code === undefined) {
 						console.error('Unknown Vue Expert Table Error:', error.message, error.stack)
 					}
+					this.cancel_editing()
 					return resolve(undefined)
 				}
 			})
@@ -1180,15 +1181,33 @@ export default /*#__PURE__*/Vue.extend({
 		async cancel_editing () {
 			this.is_canceling = true
 			if (this.adding_row_selected) {
-				this.item_record = this.copyObject(this.item_record_default)
+				if (this.logging) console.log('cancel adding before', {
+					selected_row: clone(this.selected_row),
+					selected_row_before: clone(this.selected_row_before),
+				}) 
+
+				this.copyObject(this.item_record, this.item_record_default)
+				if (this.logging) console.log('cancel adding after', {
+					selected_row: clone(this.selected_row),
+					selected_row_before: clone(this.selected_row_before),
+				}) 
 				this.$forceUpdate()
 			} else {
-				this.selected_row = this.copyObject(this.selected_row_before)
+				if (this.logging) console.log('cancel editing before', {
+					selected_row: this.selected_row,
+					selected_row_before: this.selected_row_before,
+				})
+				this.copyObject(this.selected_row, this.selected_row_before)
+				if (this.logging) console.log('cancel editing after', {
+					selected_row: clone(this.selected_row),
+					selected_row_before: clone(this.selected_row_before),
+				}) 
 				await this.deSelectRow()
 				this.$forceUpdate()
 			}
 		},
 		event_input (e: any) {
+			if (this.logging) console.log('EVENT INPUT VED', e)
             if (this.selected_field) {
 				if (this.logging) console.log('EVENT INPUT VED', e)
                 const name = this.selected_field.value
@@ -1214,6 +1233,7 @@ export default /*#__PURE__*/Vue.extend({
             }
 		},
 		async event_blur (_e: FocusEvent) {
+			console.log('BLUR')
 			if (this.selected_row || this.adding_row_selected) {
 				if (!this.adding_row_selected && !this.is_canceling) {
 					if (this.saveOnBlur) {
@@ -1370,7 +1390,30 @@ export default /*#__PURE__*/Vue.extend({
 			const keys = Object.keys(this.$scopedSlots)
 			return keys.find(x => x.startsWith(name)) !== undefined
 		},
-		copyObject (source: any) : any {
+		copyObject (target: any, source: any) : any {
+			if (target && source) {
+				const targetCopy = Object.assign({}, source)
+				if (this.logging) console.log('copy object source', source) 
+				for (const prop in source) {
+					if (typeof target[prop] !== 'undefined') {
+						if (Array.isArray(source[prop])) {
+							targetCopy[prop] = clone(source[prop])
+						} else if (moment.isMoment(source[prop])) {
+							targetCopy[prop] = source[prop].clone()
+						} else if (typeof source[prop] === 'object' && !!source[prop]) {
+							this.copyObject(targetCopy[prop], source[prop])
+						} else {
+							targetCopy[prop] = source[prop]
+						}
+					}
+				}
+				if (this.logging) console.log('copy object final', targetCopy) 
+				Object.assign(target, targetCopy)
+				return clone(target)
+			}
+			return null
+		},
+		cloneObject (source: any) : any {
             return clone(source)
 		},
 		formatValue(val: any, field: Field) {
@@ -1382,8 +1425,8 @@ export default /*#__PURE__*/Vue.extend({
 			return val
 		},
 		async cleanForm () {
-			this.item_record = this.copyObject(this.item_record_default)
-			this.item_record_before = this.copyObject(this.item_record_default)
+			this.copyObject(this.item_record, this.item_record_before)
+			this.copyObject(this.item_record_before, this.item_record_before)
 			await this.deSelectRow()
 			this.resetForm()
 		},
@@ -1419,6 +1462,7 @@ export default /*#__PURE__*/Vue.extend({
 		}
     },
 });
+export default VueExpertDatatable
 </script>
 
 <style lang="scss">

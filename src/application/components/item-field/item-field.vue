@@ -73,6 +73,22 @@
 				@focus="event_focus"
 				@keydown="event_key_down"
 			></div>
+			<date-picker
+				v-if="field.fieldType === 'date' || field.fieldType === 'datetime' || field.fieldType === 'time' || field.fieldType === 'year' || field.fieldType === 'week'"
+				v-model="localValue"
+				:ref="'input_' + field.value"
+				:inputName="field.value"
+				:input-key="`item_field_input_${index}_${field.value}`"
+				:placeholder="inputPlaceholder(field)"
+				:format="field.fieldData.date_format || 'YYYY-MM-DD'"
+				:append-to-body="false"
+				:open.sync="open"
+				:type="field.fieldType"
+				@close="event_blur"
+				@open="event_focus"
+				@keydown="event_key_down"
+				@deselect-row="deselectRow"
+			></date-picker>
 		</form>
     </div>
 </template>
@@ -88,6 +104,10 @@ import ExpertDatatableInput from '../inputs/input/expert_datatable_input.vue'
 import ExpertDatatableInputNumber from '../inputs/input-number/expert_datatable_input_number.vue'
 import ExpertDatatableAutonumeric from '../inputs/auto-numeric/expert_datatable_auto_numeric.vue'
 import ExpertDatatableSelect from '../inputs/select/expert_datatable_select.vue'
+import DatePicker from 'vue2-datepicker';
+import 'vue2-datepicker/index.css';
+
+const datePickerLangEs = () => import('vue2-datepicker/locale/es.js')
 
 export default /*#__PURE__*/Vue.extend({
     name: 'ExpertDatatableItemField',
@@ -95,12 +115,14 @@ export default /*#__PURE__*/Vue.extend({
 		'expert-datatable-input': ExpertDatatableInput,
 		'expert-datatable-input-number': ExpertDatatableInputNumber,
 		'expert-datatable-autonumeric': ExpertDatatableAutonumeric,
-		'expert-datatable-select': ExpertDatatableSelect
+		'expert-datatable-select': ExpertDatatableSelect,
+		DatePicker
 	},
     data(): DataInterface {
         return {
             localValue: this.value,
-            language: enEN
+            language: enEN,
+			open: false
         }
     },
     props: {
@@ -134,9 +156,14 @@ export default /*#__PURE__*/Vue.extend({
     },
     beforeMount() {
         this.language = initLanguage(this.$expert_datatable_config.lang, this.tableName)
+		if (this.$expert_datatable_config.lang === 'ES') {
+			datePickerLangEs()
+		}
     },
     mounted() {
-        
+        if (!this.isAdding) {
+			this.open = true
+		}
     },
     methods: {
         inputPlaceholder(field: FieldsInterface) : string {
@@ -148,7 +175,10 @@ export default /*#__PURE__*/Vue.extend({
 			this.$emit('focus', e)
 		},
 		event_blur (e: FocusEvent) {
-			this.$emit('blur', e)
+			this.$nextTick(() => {
+				console.log('event blur field')
+				this.$emit('blur', e)
+			})
 		},
 		event_key_down (e: any) {
 			this.$emit('keydown', e)
@@ -161,5 +191,13 @@ export default /*#__PURE__*/Vue.extend({
 </script>
 
 <style lang="scss">
+.mx-datepicker {
+	width: 100%;
 
+	.mx-input {
+		background-color: transparent;
+		border: none;
+		box-shadow: none;
+	}
+}
 </style>

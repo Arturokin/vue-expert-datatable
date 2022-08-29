@@ -19,7 +19,7 @@ $font-size-large: 19px;
 	.align-left {
 		text-align: left;
 
-		input, select, span, label, p, div {
+		input, select, span, label, p {
 			text-align: left;
 		}
 	}
@@ -44,17 +44,17 @@ $font-size-large: 19px;
         border-collapse: separate;
         border-spacing: 0;
         width: 100%;
-        tbody,
-        thead {
-            tr,
-            td,
-            th {
+        &> tbody,
+        &> thead {
+            &> tr,
+			&> td,
+            &> th {
 				padding: 4px 4px;
             }
 
-			tr,
-            td,
-            th,
+			&> tr,
+            &> td,
+            &> th,
 			input,
 			div,
 			span,
@@ -85,17 +85,17 @@ $font-size-large: 19px;
 			}
 		}
         &.expert-datatable-small {
-            tbody,
-            thead {
-                tr,
-				td,
-				th {
+            &> tbody,
+            &> thead {
+                &> tr,
+				&> td,
+				&> th {
 					padding: 0px;
 				}
 
-				tr,
-				td,
-				th,
+				&> tr,
+				&> td,
+				&> th,
 				input,
 				div,
 				span,
@@ -114,17 +114,17 @@ $font-size-large: 19px;
 			}
         }
         &.expert-datatable-large {
-            tbody,
-            thead {
-                tr,
-				td,
-				th {
+            &> tbody,
+            &> thead {
+                &> tr,
+				&> td,
+				&> th {
 					padding: 8px 8px;
 				}
 
-				tr,
-				td,
-				th,
+				&> tr,
+				&> td,
+				&> th,
 				input,
 				div,
 				span,
@@ -142,9 +142,9 @@ $font-size-large: 19px;
 				font-size: $font-size-large;
 			}
         }
-        thead {
-            tr {
-                th {
+        &> thead {
+            &> tr {
+                &> th {
 					font-family: 'Roboto', sans-serif;
                     color: rgba(0, 0, 0, .85);
                     font-weight: 500;
@@ -157,21 +157,23 @@ $font-size-large: 19px;
         }
 
 		&.bordered {
-			tr {
-				th {
-					border-top: $border;
+			&> thead, &> tbody {
+				&> tr {
+					&> th {
+						border-top: $border;
+					}
+					&> td:first-child, &> th:first-child {
+						border-left: $border;
+						border-right: $border;
+					}
+					&> td:not(:first-child), &> th:not(:first-child) {
+						border-right: $border;
+					}
+					&> td {
+						border-bottom: $border;
+					}
 				}
-				td:first-child, th:first-child {
-					border-left: $border;
-					border-right: $border;
-				}
-				td:not(:first-child), th:not(:first-child) {
-					border-right: $border;
-				}
-                td {
-					border-bottom: $border;
-                }
-            }
+			}
 		}
 
 		.expert-column {

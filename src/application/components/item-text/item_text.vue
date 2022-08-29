@@ -7,6 +7,7 @@
 <script lang="ts">
 import Field from '@/application/interface/field'
 import Vue, { PropType } from 'vue'
+import moment from 'moment'
 export default Vue.extend({
 	name: 'ExpertDatatableItemText',
 	props: {
@@ -40,6 +41,31 @@ export default Vue.extend({
 			}
 			return undefined
 		},
+		is_date () {
+			return ['date', 'datetime', 'time', 'month', 'year'].includes(this.field.fieldType)
+		},
+		date_format () {
+			if (this.is_date) {
+				if (this.field.fieldData.date_format) {
+					return this.field.fieldData.date_format
+				}
+				if (this.field.fieldType === 'date') {
+					return 'YYYY-MM-DD'
+				} else if (this.field.fieldType === 'datetime') {
+					return 'YYYY-MM-DD HH:mm:ss'
+				} else if (this.field.fieldType === 'time') {
+					return 'HH:mm:ss'
+				} else if (this.field.fieldType === 'month') {
+					return 'YYYY-MM'
+				} else if (this.field.fieldType === 'year') {
+					return 'YYYY'
+				} else {
+					return 'YYYY-MM-DD'
+				}
+			} else {
+				return 'YYYY-MM-DD'
+			}
+		},
 		formattedText () : any {
 			let formatted: any = ''
 			if (this.field.selectData && this.field.selectData.itemText && !this.field_select_selected && this.item) {
@@ -51,6 +77,8 @@ export default Vue.extend({
 				}
 			} else if (this.field_select_selected && this.field.selectData && this.field.selectData.itemText) {
 				formatted = this.field_select_selected[this.field.selectData.itemText]
+			} else if (this.is_date) {
+				formatted = this.item[this.field.value] && moment(this.item[this.field.value]).isValid() ? moment(this.item[this.field.value]).format(this.date_format) : ''
 			} else {
 				formatted = this.item[this.field.value]
 			}

@@ -7,12 +7,12 @@ const prepareText = (text: string, table_name: string) => {
 }
 
 export default (language: string, table_name: string) : Language => {
-    let lang: any = enEN
+    let lang: any = Object.assign({}, enEN)
     if (language === 'ES') {
-        lang = esEs
+        lang = Object.assign({}, esEs)
     }
     if (language === 'EN') {
-        lang = enEN
+        lang = Object.assign({}, enEN)
     }
     let aProperty: string;
     for (aProperty in lang) {
